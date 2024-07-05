@@ -483,9 +483,11 @@ private void setListData(TagBean bean1) {
                             break;
 
                         case "I0":
-                            if(getTagType(epcId).equalsIgnoreCase(typeBean)){
-                                DestinationTag = epcId;
-                                showCustomConfirmationDialog("Do you want to move the pallet in "+ db.getProductNameByProductTagId(epcId)+"?","SAVE");
+                            String i0BinTagId = LoadingUnloadingActivityHelpers.getI0BinTagIdForPallet(PalletTag, orderDetailsList);
+                            Log.e("destid-I0",i0BinTagId);
+                            if(epcId.equalsIgnoreCase(i0BinTagId)){
+                                DestinationTag = i0BinTagId;
+                                showCustomConfirmationDialog("Do you want to move the pallet in "+ db.getProductNameByProductTagId(i0BinTagId)+"?","SAVE");
 
                             } else{
                                 isRfidReadingIsInProgress = false;
@@ -525,7 +527,16 @@ Log.e("DBTAG", tagWithDestination.getDestinationTag());
         orderDetailsList.addAll(updatedAll);
         Log.e("thisorderstatus","CompletedALL"+updatedAll.size());
     }
-    if(workOrderType.equalsIgnoreCase("L0") || workOrderType.equalsIgnoreCase("L1")){
+//    if(workOrderType.equalsIgnoreCase("L0") || workOrderType.equalsIgnoreCase("L1")){
+//        if(disOrderDetailsList!=null){
+//            disOrderDetailsList.clear();
+//            binding.disCount.setText(""+disOrderDetailsList.size());
+//            disOrderDetailsList.addAll(updatedDis);
+//            Log.e("thisorderstatus","CompletedDIS"+updatedDis.size());
+//        }
+//        workOrderDetailsDisAdapter.notifyDataSetChanged();
+//    }
+    if(workOrderType.equalsIgnoreCase("I0")){
         if(disOrderDetailsList!=null){
             disOrderDetailsList.clear();
             binding.disCount.setText(""+disOrderDetailsList.size());
@@ -535,7 +546,7 @@ Log.e("DBTAG", tagWithDestination.getDestinationTag());
         workOrderDetailsDisAdapter.notifyDataSetChanged();
     }
 
-    if(workOrderType.equalsIgnoreCase("U0") || workOrderType.equalsIgnoreCase("U1")||workOrderType.equalsIgnoreCase("I0")){
+    if(workOrderType.equalsIgnoreCase("U0") || workOrderType.equalsIgnoreCase("U1")){
         if(recOrderDetailsList!=null){
             recOrderDetailsList.clear();
             binding.recCount.setText(""+recOrderDetailsList.size());
@@ -728,15 +739,22 @@ Log.e("DBTAG", tagWithDestination.getDestinationTag());
                                                     orderDetailsList.add(workOrderListItem);
                                                     LAST_SUCCEED_PALLET = "";
                                                 }
-                                                if (workorderType.equalsIgnoreCase("U0") || workorderType.equalsIgnoreCase("U1")||workorderType.equalsIgnoreCase("I0")) {
+                                                if (workorderType.equalsIgnoreCase("U0") || workorderType.equalsIgnoreCase("U1")) {
                                                     if(!palletTagId.equalsIgnoreCase(LAST_SUCCEED_PALLET)||!db.isEpcPresentInOffline(palletTagId)) {
                                                         recOrderDetailsList.add(workOrderListItem);
                                                         LAST_SUCCEED_PALLET = "";
                                                     }
 
-                                                } else if (workorderType.equalsIgnoreCase("L0") || workorderType.equalsIgnoreCase("L1")) {
+                                                }
+//                                                else if (workorderType.equalsIgnoreCase("L0") || workorderType.equalsIgnoreCase("L1")) {
+//                                                    if(!palletTagId.equalsIgnoreCase(LAST_SUCCEED_PALLET)||!db.isEpcPresentInOffline(palletTagId)) {
+//                                                       disOrderDetailsList.add(workOrderListItem);
+//                                                        LAST_SUCCEED_PALLET = "";
+//                                                    }
+//                                                }
+                                                else if (workorderType.equalsIgnoreCase("I0")) {
                                                     if(!palletTagId.equalsIgnoreCase(LAST_SUCCEED_PALLET)||!db.isEpcPresentInOffline(palletTagId)) {
-                                                       disOrderDetailsList.add(workOrderListItem);
+                                                        disOrderDetailsList.add(workOrderListItem);
                                                         LAST_SUCCEED_PALLET = "";
                                                     }
                                                 }
@@ -946,7 +964,7 @@ Log.e("DBTAG", tagWithDestination.getDestinationTag());
                                     workOrderDetailsDisAdapter.notifyDataSetChanged();
                                 }
 
-                                if(workOrderType.equalsIgnoreCase("U0") || workOrderType.equalsIgnoreCase("U1")){
+                                if(workOrderType.equalsIgnoreCase("U0") || workOrderType.equalsIgnoreCase("U1")||workOrderType.equalsIgnoreCase("I0")){
                                     if(recOrderDetailsList!=null){
                                         recOrderDetailsList.clear();
                                         binding.recCount.setText(""+recOrderDetailsList.size());
@@ -959,7 +977,7 @@ Log.e("DBTAG", tagWithDestination.getDestinationTag());
                                 isOtherWorkIsInProgress = false;
                                 AssetUtils.showCommonBottomSheetSuccessDialog(context, "The pallet has been moved successfully");
                             } else {
-                                AssetUtils.showCommonBottomSheetErrorDialog(context, "Internal Server Error");
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, result.getString("message").trim());
                             }
                         } catch (JSONException e) {
                             // throw new RuntimeException(e);

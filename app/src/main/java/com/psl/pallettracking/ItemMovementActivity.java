@@ -607,12 +607,16 @@ public class ItemMovementActivity extends AppCompatActivity implements DecodeInf
         protected JSONObject doInBackground(String... params) {
             if (barcodeList.size() > 0) {
                 try {
+                    String activity_type = "ITEM_MOVEMENT";
                     JSONObject jsonobject = null;
                     jsonobject = new JSONObject();
+                    jsonobject.put(APIConstants.K_CUSTOMER_ID, SharedPreferencesManager.getCustomerId(context));
+                    jsonobject.put(APIConstants.K_USER_ID, SharedPreferencesManager.getSavedUserId(context));
                     jsonobject.put(APIConstants.K_DEVICE_ID, SharedPreferencesManager.getDeviceId(context));
+                    jsonobject.put(APIConstants.K_ACTIVITY_TYPE, activity_type);
+                    jsonobject.put(APIConstants.K_INVENTORY_COUNT, barcodeList.size());
                     jsonobject.put(APIConstants.K_INVENTORY_START_DATE_TIME, START_DATE);
                     jsonobject.put(APIConstants.K_INVENTORY_END_DATE_TIME, END_DATE);
-                    jsonobject.put(APIConstants.K_INVENTORY_COUNT, barcodeList.size());
                     jsonobject.put(APIConstants.K_SOURCE_PALLET_TAG_ID, SOURCE_PALLET_TAG_ID);
                     jsonobject.put(APIConstants.K_DESTINATION_PALLET_TAG_ID, DEST_PALLET_TAG_ID);
                     jsonobject.put(APIConstants.K_SOURCE_BIN_TAG_ID, SOURCE_BIN_TAG_ID);

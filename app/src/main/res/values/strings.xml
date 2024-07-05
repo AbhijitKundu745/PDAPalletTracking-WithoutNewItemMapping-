@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Activities of Pallet</string>
+    <string name="app_name">1.0Activities of Pallet</string>
     <string name="uhf_initialization">Please wait...\nUHF Initialization is in progress</string>
     <string name="asset_type_master_sync_error">Please Sync Asset Type Master</string>
     <string name="location_master_sync_error">Vendor Master not found</string>
@@ -39,6 +39,7 @@
     <string name="confirm_cancel_track_point">Are you sure,you want to cancel Track Point?</string>
     <string name="confirm_cancel_security_out">Are you sure,you want to cancel Security OUT?</string>
     <string name="confirm_cancel_scanning">Are you sure,you want to cancel Scanning?</string>
+    <string name="confirm_back">Do you want to back?</string>
 
 
     <string name="login_data_validation">Please enter valid username/password</string>

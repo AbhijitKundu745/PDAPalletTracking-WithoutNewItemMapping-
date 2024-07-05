@@ -244,6 +244,19 @@
                 android:background="@drawable/round_button_red"
                 android:text="Clear"/>
             <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnBack"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:textColor="@color/white"
+                android:layout_height="match_parent"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                android:background="@drawable/round_button_red"
+                android:text="Back"/>
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnPower"
                 android:layout_width="0dp"
                 android:layout_weight="1"

@@ -14,12 +14,16 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
@@ -58,6 +62,7 @@ public class TruckMappingForDispatchActivity extends AppCompatActivity {
     private String default_source_item = "Select DC No";
     String CURRENT_EPC = "";
     String TRUCK_TAG_ID = "";
+    String DC_NO = "";
     HashMap<String, String> hashMap = new HashMap<>();
     public ArrayList<HashMap<String, String>> tagList = new ArrayList<HashMap<String, String>>();
     Dialog dialog;
@@ -71,22 +76,28 @@ public class TruckMappingForDispatchActivity extends AppCompatActivity {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_truck_mapping_for_dispatch);
         getSupportActionBar().hide();
         cd = new ConnectionDetector(context);
+
+        setDefault();
         binding.btnTruckRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(IS_TRUCK_TAG_SCANNED){
-                    showProgress(context, "Processing");
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
+                    if(!TextUtils.isEmpty(DC_NO)){
+                        showProgress(context, "Processing");
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
 
-                            Intent AssetPalletMappingIntent = new Intent(TruckMappingForDispatchActivity.this, AssetPalletMappingActivity.class);
-                            //AssetPalletMappingIntent.putExtra("TruckNumber", SharedPreferencesManager.getTruckNumber(context));
-                            //AssetPalletMappingIntent.putExtra("LocationName", SharedPreferencesManager.getLocationName(context));
+                                Intent AssetPalletMappingIntent = new Intent(TruckMappingForDispatchActivity.this, AssetPalletMappingActivity.class);
+                                AssetPalletMappingIntent.putExtra("DRN", DC_NO);
+                                //AssetPalletMappingIntent.putExtra("LocationName", SharedPreferencesManager.getLocationName(context));
 
-                            startActivity(AssetPalletMappingIntent);
-                        }
-                    }, 1000);
+                                startActivity(AssetPalletMappingIntent);
+                            }
+                        }, 1000);
+                    } else{
+                        AssetUtils.showCommonBottomSheetErrorDialog(context, "Please select a DC No");
+                    }
                 } else{
                     AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan truck tag");
                 }
@@ -97,18 +108,24 @@ public class TruckMappingForDispatchActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 if(IS_TRUCK_TAG_SCANNED) {
-                    showProgress(context, "Processing");
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
+                    if(!TextUtils.isEmpty(DC_NO)) {
+                        showProgress(context, "Processing");
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
 
-                            Intent AssetPalletMappingIntent = new Intent(TruckMappingForDispatchActivity.this, AssetPalletWithItemActivity.class);
-                            //AssetPalletMappingIntent.putExtra("TruckNumber", SharedPreferencesManager.getTruckNumber(context));
-                            //AssetPalletMappingIntent.putExtra("LocationName", SharedPreferencesManager.getLocationName(context));
+                                Intent AssetPalletMappingIntent = new Intent(TruckMappingForDispatchActivity.this, AssetPalletWithItemActivity.class);
+                                AssetPalletMappingIntent.putExtra("DRN", DC_NO);
+                                //AssetPalletMappingIntent.putExtra("TruckNumber", SharedPreferencesManager.getTruckNumber(context));
+                                //AssetPalletMappingIntent.putExtra("LocationName", SharedPreferencesManager.getLocationName(context));
 
-                            startActivity(AssetPalletMappingIntent);
-                        }
-                    }, 1000);
+                                startActivity(AssetPalletMappingIntent);
+                            }
+                        }, 1000);
+                    } else{
+                        AssetUtils.showCommonBottomSheetErrorDialog(context, "Please select a DC No");
+                    }
+
                 }else{
                     AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan truck tag");
                 }
@@ -120,6 +137,14 @@ public class TruckMappingForDispatchActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (allow_trigger_to_press) {
                     setDefault();
+                }
+            }
+        });
+        binding.btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (allow_trigger_to_press) {
+                    showCustomConfirmationDialog(getResources().getString(R.string.confirm_back), "BACK");
                 }
             }
         });
@@ -258,6 +283,7 @@ public class TruckMappingForDispatchActivity extends AppCompatActivity {
 
                             } else {
                                 SharedPreferencesManager.setDRN(context, SELECTED_ITEM);
+                                DC_NO = SELECTED_ITEM;
                             }
                         } else{
                             AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan truck tag");
@@ -445,6 +471,7 @@ public class TruckMappingForDispatchActivity extends AppCompatActivity {
                 if (tagList != null) {
                     tagList.clear();
                 }
+                DC_NO = "";
             }
         });
     }
@@ -457,17 +484,65 @@ public class TruckMappingForDispatchActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
         rfidHandler.onResume();
-        Log.d("TruckMappingActivity", "onResume called");
         //setDefault();
     }
     @Override
     public void onDestroy() {
         rfidHandler.onDestroy();
         super.onDestroy();
+        finish();
     }
     @Override
     public void onPause() {
         super.onPause();
+        binding.btnClear.setVisibility(View.GONE);
+        binding.btnPower.setVisibility(View.GONE);
+        binding.btnBack.setVisibility(View.VISIBLE);
         rfidHandler.onPause();
+    }
+
+    @Override
+    public void onBackPressed() {
+        showCustomConfirmationDialog(getResources().getString(R.string.confirm_back), "BACK");
+    }
+
+    Dialog customConfirmationDialog;
+
+    public void showCustomConfirmationDialog(String msg, final String action) {
+        if (customConfirmationDialog != null) {
+            customConfirmationDialog.dismiss();
+        }
+        customConfirmationDialog = new Dialog(context);
+        if (customConfirmationDialog != null) {
+            customConfirmationDialog.dismiss();
+        }
+        customConfirmationDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        customConfirmationDialog.setCancelable(false);
+        customConfirmationDialog.setContentView(R.layout.custom_alert_dialog_layout2);
+        TextView text = (TextView) customConfirmationDialog.findViewById(R.id.text_dialog);
+        text.setText(msg);
+        Button dialogButton = (Button) customConfirmationDialog.findViewById(R.id.btn_dialog);
+        Button dialogButtonCancel = (Button) customConfirmationDialog.findViewById(R.id.btn_dialog_cancel);
+        dialogButton.setText("YES");
+        dialogButtonCancel.setText("NO");
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                customConfirmationDialog.dismiss();
+                if (action.equals("BACK")) {
+                    setDefault();
+                    finish();
+                }
+
+            }
+        });
+        dialogButtonCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                customConfirmationDialog.dismiss();
+            }
+        });
+        // customConfirmationDialog.getWindow().getAttributes().windowAnimations = R.style.SlideBottomUpAnimation;
+        customConfirmationDialog.show();
     }
 }

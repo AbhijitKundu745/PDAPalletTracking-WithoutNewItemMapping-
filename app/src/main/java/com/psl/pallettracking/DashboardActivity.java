@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -29,7 +31,9 @@ import com.psl.pallettracking.databinding.ActivityDashboardBinding;
 import com.psl.pallettracking.helper.APIConstants;
 import com.psl.pallettracking.helper.AppConstants;
 import com.psl.pallettracking.helper.AssetUtils;
+import com.psl.pallettracking.helper.BatteryStatusHelper;
 import com.psl.pallettracking.helper.ConnectionDetector;
+import com.psl.pallettracking.helper.NetworkUtils;
 import com.psl.pallettracking.helper.SharedPreferencesManager;
 
 import org.json.JSONArray;
@@ -48,6 +52,7 @@ public class DashboardActivity extends AppCompatActivity {
     private Context context = this;
     private DatabaseHandler db;
     private ConnectionDetector cd;
+    String NetworkStatus = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +63,16 @@ public class DashboardActivity extends AppCompatActivity {
 
         db = new DatabaseHandler(context);
         cd = new ConnectionDetector(context);
+        BatteryStatusHelper batteryStatusHelper = getBatteryStatus();
+        Log.e("BatteryStat","Battery Level: " + batteryStatusHelper.level + "%, Charging: " + batteryStatusHelper.charging);
 
+        NetworkUtils.checkPingStrength("192.168.1.7", new NetworkUtils.PingStrengthCallback() {
+            @Override
+            public void onPingStrengthResult(String result) {
+                Log.d("PingStrength", result);
+                // Update your UI here
+            }
+        });
         // set a GridLayoutManager with default vertical orientation and 2 number of columns
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getApplicationContext(), 2); // you can change grid columns to 3 or more
         binding.recycleview.setLayoutManager(gridLayoutManager); // set LayoutManager to RecyclerView
@@ -408,5 +422,18 @@ public class DashboardActivity extends AppCompatActivity {
         }
     }
     //19020019140C002418800310
-
+    private BatteryStatusHelper getBatteryStatus() {
+        BatteryStatusHelper batteryStatusHelper = new BatteryStatusHelper();
+        IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = this.registerReceiver(null, filter);
+        batteryStatusHelper.level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        batteryStatusHelper.scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        batteryStatusHelper.charging = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1) == BatteryManager.BATTERY_STATUS_CHARGING;
+        batteryStatusHelper.usbCharging = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) == BatteryManager.BATTERY_PLUGGED_USB;
+        batteryStatusHelper.acCharging = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) == BatteryManager.BATTERY_PLUGGED_AC;
+        batteryStatusHelper.voltage = batteryStatus.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
+        batteryStatusHelper.temperature = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+        batteryStatusHelper.technology = batteryStatus.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY);
+        return batteryStatusHelper;
+    }
 }

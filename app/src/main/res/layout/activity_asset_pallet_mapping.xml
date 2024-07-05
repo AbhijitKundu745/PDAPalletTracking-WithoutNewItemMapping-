@@ -12,12 +12,12 @@
         android:orientation="vertical"
         android:background="@drawable/gradient_color"
         tools:context=".AssetPalletMappingActivity">
-        <ImageView
+        <!--<ImageView
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="0.15"
             android:scaleType="fitXY"
-            android:src="@drawable/banner"/>
+            android:src="@drawable/banner"/>-->
         <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="0dp"

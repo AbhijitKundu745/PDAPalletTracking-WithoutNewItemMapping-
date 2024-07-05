@@ -55,8 +55,7 @@
             android:layout_width="match_parent"
             android:layout_height="75dp"
             android:layout_marginTop="5dp"
-            style="@style/NoUnderlineTextInputLayout"
-           >
+            style="@style/NoUnderlineTextInputLayout">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edtUserName"
@@ -78,7 +77,6 @@
             android:layout_width="match_parent"
             android:layout_height="75dp"
             app:passwordToggleEnabled="true"
-            android:drawableRight="@android:drawable/ic_menu_info_details"
             style="@style/NoUnderlineTextInputLayout">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -92,7 +90,7 @@
                 android:maxLength="50"
                 android:paddingLeft="5dp"
                 android:textColor="#0C0C0C"
-                android:textColorHint="#C0CA33"
+                android:textColorHint="@color/lighter_grey"
                 android:textSize="15sp" />
 
         </com.google.android.material.textfield.TextInputLayout>
@@ -140,7 +138,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
-            android:text="Version: 3.7" />
+            android:text="Version: 3.7.5.1" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 

@@ -3,6 +3,7 @@ package com.psl.pallettracking;
 import static com.psl.pallettracking.helper.AssetUtils.hideProgressDialog;
 import static com.psl.pallettracking.helper.AssetUtils.showProgress;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -11,6 +12,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -53,6 +57,7 @@ public class TruckMappingActivity extends AppCompatActivity {
 
     String CURRENT_EPC = "";
     String TRUCK_TAG_ID = "";
+    String DC_NO = "";
     HashMap<String, String> hashMap = new HashMap<>();
     public ArrayList<HashMap<String, String>> tagList = new ArrayList<HashMap<String, String>>();
 
@@ -63,7 +68,6 @@ public class TruckMappingActivity extends AppCompatActivity {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_truck_mapping);
         getSupportActionBar().hide();
         cd = new ConnectionDetector(context);
-
         binding.btnTruckRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -74,6 +78,7 @@ public class TruckMappingActivity extends AppCompatActivity {
                         public void run() {
 
                             Intent AssetPalletMappingIntent = new Intent(TruckMappingActivity.this, AssetPalletMappingActivity.class);
+                            AssetPalletMappingIntent.putExtra("DRN", DC_NO);
                             //AssetPalletMappingIntent.putExtra("TruckNumber", SharedPreferencesManager.getTruckNumber(context));
                             //AssetPalletMappingIntent.putExtra("LocationName", SharedPreferencesManager.getLocationName(context));
 
@@ -108,6 +113,7 @@ public class TruckMappingActivity extends AppCompatActivity {
                         public void run() {
 
                             Intent AssetPalletMappingIntent = new Intent(TruckMappingActivity.this, AssetPalletWithItemActivity.class);
+                            AssetPalletMappingIntent.putExtra("DRN", DC_NO);
                             //AssetPalletMappingIntent.putExtra("TruckNumber", SharedPreferencesManager.getTruckNumber(context));
                             //AssetPalletMappingIntent.putExtra("LocationName", SharedPreferencesManager.getLocationName(context));
 
@@ -125,6 +131,14 @@ public class TruckMappingActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (allow_trigger_to_press) {
                     setDefault();
+                }
+            }
+        });
+        binding.btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (allow_trigger_to_press) {
+                    showCustomConfirmationDialog(getResources().getString(R.string.confirm_back), "BACK");
                 }
             }
         });
@@ -332,6 +346,7 @@ public class TruckMappingActivity extends AppCompatActivity {
                     binding.textDRN.setText(DRN);
                     binding.textDRN.setSelected(true);
                     SharedPreferencesManager.setDRN(context, DRN);
+                    DC_NO = DRN;
                 }
                 if (responseObject.has("ProcessType")) {
                     process_type = responseObject.getString("ProcessType");
@@ -368,6 +383,7 @@ public class TruckMappingActivity extends AppCompatActivity {
                 TRUCK_TAG_ID = "";
                 CURRENT_EPC = "";
                 IS_SCANNING_LOCKED = false;
+                IS_TRUCK_TAG_SCANNED = false;
                 binding.edtTruckID.setText("");
                 binding.textTruckNumber.setText("");
                 binding.textDRN.setText("");
@@ -388,19 +404,64 @@ public class TruckMappingActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
         rfidHandler.onResume();
-        Log.d("TruckMappingActivity", "onResume called");
         //setDefault();
     }
     @Override
     public void onDestroy() {
         rfidHandler.onDestroy();
         super.onDestroy();
+        finish();
     }
     @Override
     public void onPause() {
+        binding.btnClear.setVisibility(View.GONE);
+        binding.btnPower.setVisibility(View.GONE);
+        binding.btnBack.setVisibility(View.VISIBLE);
         super.onPause();
         rfidHandler.onPause();
     }
 
+    @Override
+    public void onBackPressed() {
+        showCustomConfirmationDialog(getResources().getString(R.string.confirm_back), "BACK");
+    }
+    Dialog customConfirmationDialog;
 
+    public void showCustomConfirmationDialog(String msg, final String action) {
+        if (customConfirmationDialog != null) {
+            customConfirmationDialog.dismiss();
+        }
+        customConfirmationDialog = new Dialog(context);
+        if (customConfirmationDialog != null) {
+            customConfirmationDialog.dismiss();
+        }
+        customConfirmationDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        customConfirmationDialog.setCancelable(false);
+        customConfirmationDialog.setContentView(R.layout.custom_alert_dialog_layout2);
+        TextView text = (TextView) customConfirmationDialog.findViewById(R.id.text_dialog);
+        text.setText(msg);
+        Button dialogButton = (Button) customConfirmationDialog.findViewById(R.id.btn_dialog);
+        Button dialogButtonCancel = (Button) customConfirmationDialog.findViewById(R.id.btn_dialog_cancel);
+        dialogButton.setText("YES");
+        dialogButtonCancel.setText("NO");
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                customConfirmationDialog.dismiss();
+                if (action.equals("BACK")) {
+                    setDefault();
+                    finish();
+                }
+
+            }
+        });
+        dialogButtonCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                customConfirmationDialog.dismiss();
+            }
+        });
+        // customConfirmationDialog.getWindow().getAttributes().windowAnimations = R.style.SlideBottomUpAnimation;
+        customConfirmationDialog.show();
+    }
 }

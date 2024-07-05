@@ -259,6 +259,21 @@ public class LoadingUnloadingActivityHelpers {
         }
         return loadingAreaTagId;
     }
+    public static String getI0BinTagIdForPallet(String palletTagId, List<WorkOrderListItem> workOrderListItemList) {
+        String binTagId = "-";
+        if (workOrderListItemList != null) {
+            for (WorkOrderListItem item : workOrderListItemList) {
+                // Check if the string is equal to any of the fields of the current item
+                // Check if the current item's palletTagId matches the one we're looking for
+                if (palletTagId.equals(item.getPalletTagId())) {
+                    // If found, retrieve the loadingAreaTagId and break the loop
+                    binTagId = item.getBinLocationTagId();
+                    break;
+                }
+            }
+        }
+        return binTagId;
+    }
 
     public static List<WorkOrderListItem> getUpdatedWorkOrderList(List<WorkOrderListItem> itemList, String palletTagIdToFind, String newStatus) {
         List<WorkOrderListItem> updatedList = new ArrayList<>();

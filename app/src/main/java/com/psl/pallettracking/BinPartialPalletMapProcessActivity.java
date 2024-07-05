@@ -596,7 +596,7 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                 BinPartialPalletMappingCreationProcessModel obj = pickedOrderList.get(i);
                 dataObject.put("BinName",obj.getBinNumber());
                 if(obj.getBatchId().equalsIgnoreCase(null)){
-                    dataObject.put("BatchID","");
+                    dataObject.put("BatchID",null);
                 } else{
                     dataObject.put("BatchID",obj.getBatchId());
                 }
@@ -605,6 +605,7 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                 jsonArray.put(dataObject);
             }
             jsonObject.put("ItemDetails",jsonArray);
+            Log.e("JSONREQL0", jsonObject.toString());
 
             OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
                     .connectTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
