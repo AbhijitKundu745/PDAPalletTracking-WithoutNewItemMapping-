@@ -82,6 +82,7 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
 
     private SeuicGlobalRfidHandler rfidHandler;
     private DatabaseHandler db;
+    private List<BinPartialPalletMappingCreationProcessModel> originalOrderList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -148,6 +149,7 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
             orderList.clear();
         }
         orderList = new ArrayList<>();
+        originalOrderList = new ArrayList<>();
         adapter = new BinPartialPalletMappingCreationProcessAdapter(context, orderList);
         binding.rvPallet.setAdapter(adapter);
         adapter.notifyDataSetChanged();
@@ -184,11 +186,9 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                             // Item not found in original list
                             // Handle this case if needed
                         }
-
-
                     }
                 } else{
-                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan pallet tag");
+                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan DC tag");
                 }
             }
         });
@@ -215,7 +215,7 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                 if (position == 0) {
                     SELECTED_BIN = "";
                     BIN_TAG_SCANNED = false;
-                    binding.textScanBin.setText("Scan Bin");
+                    binding.textScanBin.setText("");
                 } else {
                     SELECTED_BIN = binding.spBin.getSelectedItem().toString();
                     //TODO call here API to get BIN Details FROM Server
@@ -295,10 +295,11 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if (selectedSourceBinObject != null) {
                     //String qty = binding.edtPickedQty.getText().toString();
+
                     if (qty.equals("")) {
                         //please add qty
                         AssetUtils.showCommonBottomSheetErrorDialog(context, "Please add item quantity");
-                    } else {
+                    } else if(!qty.equalsIgnoreCase("0")){
                         int prevQty = Integer.parseInt(qty);
                         int TotalQty = 0;
                         for (BinPartialPalletMappingCreationProcessModel item : pickedOrderList) {
@@ -316,31 +317,34 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                         BinPartialPalletMappingCreationProcessModel obj = new BinPartialPalletMappingCreationProcessModel();
                         obj.setPickedQty(Integer.parseInt(qty));
                         obj.setBinDescription(selectedSourceBinObject.getBinDescription());
-                        obj.setBinNumber(selectedSourceBinObject.getBinNumber());
+                        //obj.setBinNumber(selectedSourceBinObject.getBinNumber());
+                        obj.setBinNumber(binding.textScanBin.getText().toString());
                         obj.setBatchId(selectedSourceBinObject.getBatchId());
+                        obj.setItemID(selectedSourceBinObject.getItemID());
+                        obj.setItemName(selectedSourceBinObject.getItemName());
 
-                       // if (!AssetUtils.isItemAlreadyAdded(selectedSourceBinObject.getBinDescription(), pickedOrderList)) {
-                            BinPartialPalletMappingCreationProcessModel itemObj = AssetUtils.getItemObject(selectedSourceBinObject.getBinDescription(), selectedSourceBinObject.getBinNumber(), orderList);
-                            if(itemObj!=null){
-                                if(itemObj.getPickedQty() >= Integer.parseInt(qty)){
-                                    pickedOrderList.add(obj);
-                                    orderList.remove(itemObj);
-                                    int originalQty = itemObj.getPickedQty();
-                                    int diff = originalQty-Integer.parseInt(qty);
-                                    itemObj.setPickedQty(diff);
-                                    orderList.add(itemObj);
+                        // if (!AssetUtils.isItemAlreadyAdded(selectedSourceBinObject.getBinDescription(), pickedOrderList)) {
+                        BinPartialPalletMappingCreationProcessModel itemObj = AssetUtils.getItemObject(selectedSourceBinObject.getBinDescription(), selectedSourceBinObject.getBinNumber(), orderList);
+                        if(itemObj!=null){
+                            if(itemObj.getPickedQty() >= Integer.parseInt(qty)){
+                                pickedOrderList.add(obj);
+                                orderList.remove(itemObj);
+                                int originalQty = itemObj.getPickedQty();
+                                int diff = originalQty-Integer.parseInt(qty);
+                                itemObj.setPickedQty(diff);
+                                orderList.add(itemObj);
 
-                                    adapter.notifyDataSetChanged();
-                                    binding.spBin.setSelectedItem(0);
-                                    //binding.spSourceBin.setSelection(0);
-                                    binding.textScanBin.setText("Bin Name");
-                                }else{
-                                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Item Picking Qty cannot be larger than original qty");
-                                }
-
+                                adapter.notifyDataSetChanged();
+                                binding.spBin.setSelectedItem(0);
+                                //binding.spSourceBin.setSelection(0);
+                                binding.textScanBin.setText("");
                             }else{
-                                AssetUtils.showCommonBottomSheetErrorDialog(context, "Invalid Item.");
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, "Item Picking Qty cannot be larger than original qty");
                             }
+
+                        }else{
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, "Invalid Item.");
+                        }
 
 //                        } else {
 //                            AssetUtils.showCommonBottomSheetErrorDialog(context, "Item already added");
@@ -350,11 +354,13 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                         //binding.spSourceBin.setSelection(0);
                         binding.edtPickedQty.setText("");
                         binding.textItemDesc1.setText("");
-
-
                     }
+                    else{
+                        AssetUtils.showCommonBottomSheetErrorDialog(context, "Please enter a valid quantity");
+                    }
+
                 } else {
-                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Source Bin Details not selected");
+                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Please select an item");
                 }
             }
         });
@@ -466,15 +472,13 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
             if (SCANNED_EPC != null) {
                 if (!SCANNED_EPC.isEmpty()) {
                     if (SCANNED_EPC.length() >= 24) {
-
                         SCANNED_EPC = SCANNED_EPC.substring(0, 24);
                         if (AssetUtils.getTagType(SCANNED_EPC).equals(AssetUtils.TYPE_PALLET)
                                 || AssetUtils.getTagType(SCANNED_EPC).equals(AssetUtils.TYPE_TEMPORARY_STORAGE)) {
-
                             //TODO
                             if (PALLET_TAG_SCANNED) {
                                 if(AssetUtils.getTagType(SCANNED_EPC).equals(AssetUtils.TYPE_PALLET)){
-                                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Pallet Tag Already scanned");
+                                    AssetUtils.showCommonBottomSheetErrorDialog(context, "DC Tag Already scanned");
                                 }else if(AssetUtils.getTagType(SCANNED_EPC).equals(AssetUtils.TYPE_TEMPORARY_STORAGE)){
                                     //TODO location Tag
                                     AssetUtils.showCommonBottomSheetSuccessDialog(context, "Location tag scanned");
@@ -483,17 +487,25 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                                         checkForValidationsAndComplete();
                                     }
                                 }
+                                else {
+                                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan a DC tag");
+                                }
                             }
 
-                            if (!PALLET_TAG_SCANNED && !BIN_TAG_SCANNED) {
+                            if (!PALLET_TAG_SCANNED) {
                                 if(AssetUtils.getTagType(SCANNED_EPC).equals(AssetUtils.TYPE_PALLET)){
-                                    PALLET_TAG_SCANNED = true;
-                                    PALLET_TAG_ID = SCANNED_EPC;
                                     //TODO
-                                    String palletname = db.getProductNameByProductTagId(SCANNED_EPC);
-                                    binding.textScanPallet.setText(palletname);
-                                }else {
-                                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan pallet tag");
+                                    if(db.checkAssetNameByProductTagId(SCANNED_EPC)){
+                                        PALLET_TAG_SCANNED = true;
+                                        PALLET_TAG_ID = SCANNED_EPC;
+                                        String palletname = db.getProductNameByProductTagId(SCANNED_EPC);
+                                        binding.textScanPallet.setText(palletname);
+                                    } else {
+                                        AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan a DC tag");
+                                    }
+
+                                } else {
+                                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan DC tag");
                                 }
                             }
                             epcs.clear();
@@ -518,11 +530,11 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
 
     private void checkForValidationsAndComplete() {
         if(!PALLET_TAG_SCANNED){
-            AssetUtils.showCommonBottomSheetErrorDialog(context, "Please Scan Pallet tag");
+            AssetUtils.showCommonBottomSheetErrorDialog(context, "Please Scan DC tag");
         }else if(pickedOrderList.size()<=0){
             AssetUtils.showCommonBottomSheetErrorDialog(context, "Please Pick items");
         }else{
-            showCustomConfirmationDialog("Are you sure you want to upload pallet items","UPLOAD");
+            showCustomConfirmationDialog("Are you sure you want to upload the items","UPLOAD");
         }
     }
 
@@ -561,6 +573,7 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                     clearAll();
                 }
                 else if (action.equals("BACK")) {
+                    clearAll();
                     finish();
                 }
             }
@@ -590,6 +603,7 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
             jsonObject.put("LocationCategoryID", "04");
             jsonObject.put("WorkorderNumber", workOrderNumber);
             jsonObject.put("WorkorderType", workOrderType);
+            jsonObject.put("DCNumber", DRNNo);
             JSONArray jsonArray = new JSONArray();
             for(int i=0;i<pickedOrderList.size();i++){
                 JSONObject dataObject = new JSONObject();
@@ -601,6 +615,8 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                     dataObject.put("BatchID",obj.getBatchId());
                 }
                 dataObject.put("ItemDescription",obj.getBinDescription());
+                dataObject.put("ItemName",obj.getItemName());
+                dataObject.put("PickedItemID",obj.getItemID());
                 dataObject.put("Qty",obj.getPickedQty());
                 jsonArray.put(dataObject);
             }
@@ -706,7 +722,7 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
         PALLET_TAG_SCANNED = false;
         BIN_TAG_SCANNED = false;
         binding.spBin.setSelectedItem(0);
-        binding.textScanBin.setText("Bin Name");
+        binding.textScanBin.setText("");
         if (pickedOrderList != null) {
             pickedOrderList.clear();
         }
@@ -715,11 +731,26 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
 //            binObjectListForSourceSpinner.clear();
 //        }
         //binSourceAdapter.notifyDataSetChanged();//changed
-
+        binding.rvPallet.setAdapter(null);
+        orderList.clear();
+        for (BinPartialPalletMappingCreationProcessModel model : originalOrderList) {
+            BinPartialPalletMappingCreationProcessModel newModel = new BinPartialPalletMappingCreationProcessModel();
+            newModel.setItemID(model.getItemID());
+            newModel.setBinDescription(model.getBinDescription());
+            newModel.setItemName(model.getItemName());
+            newModel.setBinNumber(model.getBinNumber());
+            newModel.setBatchId(model.getBatchId());
+            newModel.setOriginalPickedQty(model.getOriginalPickedQty());
+            newModel.setPickedQty(model.getOriginalPickedQty()); // restore the original quantity
+            orderList.add(newModel);
+        }
+        adapter = new BinPartialPalletMappingCreationProcessAdapter(context, orderList);
+        binding.rvPallet.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
         selectedSourceBinObject = null;
         binding.edtPickedQty.setText("");
         binding.textTotalQty.setText("");
-        binding.textScanPallet.setText("Scan Pallet");
+        binding.textScanPallet.setText("");
         PALLET_TAG_ID = "";
         LOCATION_TAG_ID = "";
         SELECTED_BIN = "";
@@ -825,6 +856,9 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
         if (orderList != null) {
             orderList.clear();
         }
+        if (originalOrderList != null) {
+            originalOrderList.clear();
+        }
         if (binObjectListForSourceSpinner != null) {
             binObjectListForSourceSpinner.clear();
         }//changed
@@ -837,20 +871,28 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
 
                     BinPartialPalletMappingCreationProcessModel binPartialPalletMappingCreationProcessModel = new BinPartialPalletMappingCreationProcessModel();
                     JSONObject dataObject = dataArray.getJSONObject(i);
+                    String itemID = dataObject.getString("PickedItemID");
                     String itemDesc = dataObject.getString("ItemDescription");
+                    String itemName = dataObject.getString("ItemName");
                     String binName = dataObject.getString("BinName");
                     String batchID = dataObject.getString("BatchID");
                     int pickUpQty = dataObject.getInt("PickUpQty");
-                    binList.add(binName);
+                    //binList.add(binName);
+                    binPartialPalletMappingCreationProcessModel.setItemID(itemID);
                     binPartialPalletMappingCreationProcessModel.setBinDescription(itemDesc);
+                    binPartialPalletMappingCreationProcessModel.setItemName(itemName);
                     binPartialPalletMappingCreationProcessModel.setBinNumber(binName);
                     binPartialPalletMappingCreationProcessModel.setBatchId(batchID);//changed
                     binPartialPalletMappingCreationProcessModel.setPickedQty(pickUpQty);
+                    binPartialPalletMappingCreationProcessModel.setOriginalPickedQty(pickUpQty);
+                    Log.e("GetOriginaQty", String.valueOf(binPartialPalletMappingCreationProcessModel.getOriginalPickedQty()));
                     orderList.add(binPartialPalletMappingCreationProcessModel);
+                    originalOrderList.add(binPartialPalletMappingCreationProcessModel);
                     binObjectListForSourceSpinner.add(binPartialPalletMappingCreationProcessModel);
 
 
                 }
+                binList = db.getBinName();
                 if (binObjectListForSourceSpinner != null) {
                     if (binObjectListForSourceSpinner.size() > 0) {
                         BinPartialPalletMappingCreationProcessModel binPartialPalletMappingCreationProcessModel = new BinPartialPalletMappingCreationProcessModel();

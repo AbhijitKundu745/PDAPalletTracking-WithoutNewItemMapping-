@@ -1,8 +1,8 @@
 package com.psl.pallettracking.adapters;
 
 public class BinPartialPalletMappingCreationProcessModel {
-    String binNumber,binDescription;
-    String batchId;
+    String binNumber,binDescription, batchId, itemID, itemName;
+    int pickedQty, originalPickedQty;
 
     public String getBatchId() {
         return batchId;
@@ -12,7 +12,6 @@ public class BinPartialPalletMappingCreationProcessModel {
         this.batchId = batchId;
     }
 
-    int pickedQty;
 
     public String getBinNumber() {
         return binNumber;
@@ -36,5 +35,26 @@ public class BinPartialPalletMappingCreationProcessModel {
 
     public void setPickedQty(int pickedQty) {
         this.pickedQty = pickedQty;
+    }
+    public int getOriginalPickedQty() {
+        return originalPickedQty;
+    }
+
+    public void setOriginalPickedQty(int originalPickedQty) {
+        this.originalPickedQty = originalPickedQty;
+    }
+    public String getItemID() {
+        return itemID;
+    }
+
+    public void setItemID(String itemID) {
+        this.itemID = itemID;
+    }
+    public String getItemName() {
+        return itemName;
+    }
+
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
     }
 }

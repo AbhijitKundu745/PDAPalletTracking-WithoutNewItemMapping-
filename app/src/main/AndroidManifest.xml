@@ -20,6 +20,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SEUICAsset">
         <activity
+            android:name=".AssetPalletMappingWithItemForDispatchActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LoadingItemMappingActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AssetPalletMappingDispatchActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AssetPalletQRManualActivity"
+            android:exported="false" />
+        <activity
             android:name=".TruckMappingForDispatchActivity"
             android:exported="false" />
         <activity

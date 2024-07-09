@@ -105,7 +105,7 @@ public class TruckMappingActivity extends AppCompatActivity {
         binding.btnTruckRegisterWithoutQr.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+               // AssetUtils.showCommonBottomSheetErrorDialog(context, "This module is currently disabled");
                 if(IS_TRUCK_TAG_SCANNED) {
                     showProgress(context, "Processing");
                     new Handler().postDelayed(new Runnable() {
@@ -124,6 +124,25 @@ public class TruckMappingActivity extends AppCompatActivity {
                     AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan truck tag");
                 }
                 //hideProgressDialog();
+            }
+        });
+        binding.btnTruckRegisterWithQrManual.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(IS_TRUCK_TAG_SCANNED) {
+                    showProgress(context, "Processing");
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            Intent AssetPalletMappingManualIntent = new Intent(TruckMappingActivity.this, AssetPalletQRManualActivity.class);
+                            AssetPalletMappingManualIntent.putExtra("DRN", DC_NO);
+                            startActivity(AssetPalletMappingManualIntent);
+                        }
+                    }, 1000);
+                }else{
+                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan truck tag");
+                }
             }
         });
         binding.btnClear.setOnClickListener(new View.OnClickListener() {

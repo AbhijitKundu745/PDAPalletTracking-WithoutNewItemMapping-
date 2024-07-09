@@ -19,6 +19,7 @@ import com.psl.pallettracking.R;
 import com.psl.pallettracking.adapters.BinPartialPalletMappingCreationProcessModel;
 import com.psl.pallettracking.adapters.DashboardModel;
 import com.psl.pallettracking.rfid.SeuicGlobalRfidHandler;
+import com.psl.pallettracking.viewHolder.ItemDetailsList;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -1008,7 +1009,6 @@ public class AssetUtils {
 
         }
     }
-
 
 
 }

@@ -60,7 +60,7 @@
                 android:singleLine="true"
                 android:ellipsize="marquee"
                 android:padding="2dp"
-                android:text="Scan Pallet"
+                android:hint="Scan DC Tag"
                 android:background="@color/white"
                 android:textColor="#0159A9"
                 android:textStyle="bold" />
@@ -214,19 +214,20 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_gravity="bottom"
-                android:layout_weight="1.5"
+                android:layout_weight="1"
                 android:gravity="center"
                 android:singleLine="true"
                 android:ellipsize="marquee"
                 android:padding="2dp"
-                android:text="Bin Name"
+                android:hint="Bin Name"
                 android:textColor="#0159A9"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:layout_marginRight="5dp"/>
 
             <gr.escsoft.michaelprimez.searchablespinner.SearchableSpinner
                 android:id="@+id/spBin"
                 android:layout_width="0dp"
-                android:layout_weight="1.8"
+                android:layout_weight="1.5"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
                 app:StartSearchTintColor="@color/black"

@@ -160,7 +160,7 @@ public class DashboardActivity extends AppCompatActivity {
         String type = "AssetPalletMapOut";
         showProgress(context,"Processing");
         if (db.getProductMasterCount() > 0) {
-            Intent inventoryIntent = new Intent(DashboardActivity.this, TruckMappingForDispatchActivity.class);
+            Intent inventoryIntent = new Intent(DashboardActivity.this, LoadingItemMappingActivity.class);
             startActivity(inventoryIntent);
         } else {
             showCustomConfirmationDialog("No Asset Master Sync, Are you sure you want to proceed without Asset Master Sync ?", type);

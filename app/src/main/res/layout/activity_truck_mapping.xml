@@ -196,7 +196,20 @@
                 android:gravity="center"
                 android:text="Proceed with qr"
                 android:textColor="@color/white"
-                android:textSize="12sp"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:background="@drawable/round_button_green"
+                android:layout_height="match_parent"/>
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnTruckRegisterWithQrManual"
+                android:layout_width="0dp"
+                android:layout_weight="1.2"
+                android:layout_gravity="center"
+                android:layout_margin="5dp"
+                android:gravity="center"
+                android:text="Proceed With QR (Manual)"
+                android:textColor="@color/white"
+                android:textSize="10sp"
                 android:textStyle="bold"
                 android:background="@drawable/round_button_green"
                 android:layout_height="match_parent"/>
@@ -209,7 +222,7 @@
                 android:gravity="center"
                 android:text="Proceed Without QR"
                 android:textColor="@color/white"
-                android:textSize="12sp"
+                android:textSize="10sp"
                 android:textStyle="bold"
                 android:background="@drawable/round_button_green"
                 android:layout_height="match_parent"/>

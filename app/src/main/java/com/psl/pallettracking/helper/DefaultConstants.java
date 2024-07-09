@@ -15,4 +15,5 @@ public class DefaultConstants {
     public static final String DEFAULT_BIN_LOCATION_TAG_ID = "NULL";
     public static final String DEFAULT_LAST_UPDATED_DATETIME = "";
     public static final String DEFAULT_LIST_ITEM_STATUS = "Pending";
+    public static final String DEFAULT_SKU_CODE = "NULL";
 }

@@ -54,7 +54,7 @@
                     android:enabled="false"
                     android:textColor="@color/black"
                     android:digits="0123456789"
-                    android:hint="Scan Truck RFID Tag"
+                    android:hint="Scan Truck Tag"
                     android:background="@color/white"/>
                 <ImageView
                     android:id="@+id/imgTruckStatus"
@@ -65,16 +65,7 @@
                     android:layout_marginRight="10dp"
                     android:src="@drawable/rfidscan"/>
             </androidx.appcompat.widget.LinearLayoutCompat>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textStyle="bold"
-                android:textSize="22sp"
-                android:fontFamily="sans-serif"
-                android:textColor="#0159A9"
-                android:text="TRUCK DETAILS:"
-                android:paddingTop="5dp"
-                android:layout_marginBottom="5dp"/>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

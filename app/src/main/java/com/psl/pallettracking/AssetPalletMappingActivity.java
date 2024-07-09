@@ -69,6 +69,7 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
     boolean IS_SCANNING_LOCKED = false;
     boolean IS_SCANNING_ALREADY_STARTED = false;
     private boolean allow_trigger_to_press = true;
+
     public ArrayList<HashMap<String, String>> tagList = new ArrayList<HashMap<String, String>>();
     public ArrayList<HashMap<String, String>> barcodeList = new ArrayList<HashMap<String, String>>();
     HashMap<String, String> hashMap = new HashMap<>();

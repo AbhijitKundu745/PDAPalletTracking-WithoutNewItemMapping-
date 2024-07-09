@@ -10,6 +10,7 @@ public class APIConstants {
     public static final String M_UPLOAD_INVENTORY = "/PDA/TransactionMobile";
     public static final String M_ASSET_REGISTRATION = "/PDA/RegisterAssetMobile";
     public static final String M_TRUCK_DETAILS = "/PDA/GetTruckDetailsForPDA";
+    public static final String M_DC_DETAILS = "/PDA/GetDCDetailsForPDA";
     public static final String M_GET_ITEM_DETAILS = "/PDA/GetSTOLineItemsByTruckID";
     public static final String M_UPLOAD_ITEM_DETAILS = "/PDA/InsertTransactionForItems";
     public static final String M_GET_PARTIAL_WORK_ORDERS = "/PDA/GetPartialWorkorderList";
@@ -17,6 +18,7 @@ public class APIConstants {
     public static final String M_UPLOAD_PARTIAL_WORK_ORDERS_DETAILS = "/PDA/InsertPartialWorkorderDetails";
     public static final String M_GET_BIN_DETAILS = "/PDA/GetBinInfo";
  public static final String M_UPLOAD_ITEM_MOVEMENT = "/PDA/ItemMovementTransaction";
+ public static final String M_UPLOAD_ITEM_QR_MANUAL = "/PDA/InsertTransactionForQRManual";
 
     public static final String M_GET_ASSET_MASTER = "/PDA/GetAllAssetsMobile?tenantID=";
     public static final String M_GET_ROOM_MASTER = "/PDA/GetAllRooms?tenantID=";
@@ -25,6 +27,7 @@ public class APIConstants {
  public static final String M_GET_WORK_ORDER_DETAILS = "/PDA/GetReaderWorkorderList";
  public static final String M_GET_WORK_ORDER_DETAILS_FOR_PDA = "/PDA/GetWorkorderListForPDA";
  public static final String M_POST_CURRENT_PALLET = "/PDA/UploadCurrentPallet";
+ public static final String M_GET_SKU_DETAILS = "/PDA/GetSKUDetailsForPDA";
 
 
 
@@ -168,6 +171,8 @@ public class APIConstants {
  public static final String CURRENT_WORK_ORDER_NUMBER = "WorkorderNumber";
  public static final String CURRENT_WORK_ORDER_TYPE = "WorkorderType";
  public static final String CURRENT_WORK_ORDER_STATUS = "WorkorderStatus";
+ public static final String K_DC_TAG_ID = "DCTagID";
+ public static final String K_DC_NO = "DCNo";
 
  public static String getSystemDateTimeForBatchId() {
   try {

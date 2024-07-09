@@ -860,6 +860,7 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
 
             jsonobject.put(APIConstants.K_TRUCK_NUMBER, SharedPreferencesManager.getTruckNumber(context));
             jsonobject.put(APIConstants.K_DRN, SharedPreferencesManager.getDRN(context));
+            jsonobject.put(APIConstants.K_PROCESS_TYPE, SharedPreferencesManager.getProcessType(context));
 
             runOnUiThread(new Runnable() {
                 @Override

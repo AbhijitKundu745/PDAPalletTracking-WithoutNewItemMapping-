@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DatabaseHandler extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 16;
+    private static final int DATABASE_VERSION = 18;
     private static final String DATABASE_NAME = "PSL_PALLET_TRACKING-DB";
 
     private static final String TABLE_ASSET_MASTER = "Asset_Master_Table";
@@ -1972,5 +1972,33 @@ try{
                 db.close();
             }
         }
+    }
+    public boolean checkAssetNameByProductTagId(String tagId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT 1 FROM " + TABLE_PRODUCT_MASTER +
+                " WHERE " + K_PRODUCT_TAG_ID + " =? AND " + K_PRODUCT_NAME + " BETWEEN 'P2051' AND 'P2100' AND " + K_PRODUCT_NAME + " NOT IN ('P206', 'P207','P208', 'P209','P21','P210')";
+        Cursor cursor = db.rawQuery(query, new String[]{tagId});
+        try {
+            return cursor.getCount() > 0;
+        } catch (Exception e) {
+            return false;
+        } finally {
+            cursor.close();
+        }
+    }
+    public ArrayList<String> getBinName(){
+        ArrayList<String> binDetails = new ArrayList<String>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        String selectQuery = "SELECT "+K_PRODUCT_NAME+" FROM " + TABLE_PRODUCT_MASTER+" WHERE "+K_PRODUCT_TAG_ID+" LIKE '1403%' ORDER BY "+K_PRODUCT_NAME+" ASC" ;
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                //AppConstants.ASSET_TYPE_SPLIT_DATA
+                String binName = cursor.getString(cursor.getColumnIndexOrThrow(K_PRODUCT_NAME));
+                binDetails.add(binName);
+            } while (cursor.moveToNext());
+        }
+        return binDetails;
     }
 }
