@@ -88,7 +88,7 @@ public class AssetPalletMappingDispatchActivity extends AppCompatActivity implem
     private String END_DATE = "";
     private String CURRENT_EPC = "";
     private String DC_TAG_ID = "";
-    List<ItemDetailsList> itemDetailsLists;
+    List<ItemDetailsList> itemDetailsLists, originalItemList;
 
     skuitemListAdapter adapter, confirmationAdapter;
     private String SKUCode = "";
@@ -122,6 +122,7 @@ public class AssetPalletMappingDispatchActivity extends AppCompatActivity implem
             itemDetailsLists.clear();
         }
         itemDetailsLists = new ArrayList<>();
+        originalItemList = new ArrayList<>();
         adapter = new skuitemListAdapter(context, itemDetailsLists);
         adapter.notifyDataSetChanged();
         binding.rvPallet.setAdapter(adapter);
@@ -132,7 +133,7 @@ public class AssetPalletMappingDispatchActivity extends AppCompatActivity implem
                     if (areAllItemsScanned()) {
                         showCustomConfirmationDialog("Are you sure you want to upload", "UPLOAD");
                     } else {
-                        showCustomConfirmationDialogForSpecial("Are you sure want to save the data without scanning all the item?", "UPLOAD");
+                        showCustomConfirmationDialogForSpecial("Are you sure want to save the data without scanning all the items?", "UPLOAD");
                     }
 
                 }
@@ -624,6 +625,7 @@ public class AssetPalletMappingDispatchActivity extends AppCompatActivity implem
             JSONObject jsonObject = new JSONObject();
             jsonObject.put(APIConstants.K_DEVICE_ID, SharedPreferencesManager.getDeviceId(context));
             jsonObject.put(APIConstants.K_DC_NO, DC_NO);
+            jsonObject.put("Type", "QR");
             Log.e("JSONReq", SharedPreferencesManager.getHostUrl(context) + APIConstants.M_GET_SKU_DETAILS);
             Log.e("JSONReq1", jsonObject.toString());
             OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
@@ -697,7 +699,9 @@ public class AssetPalletMappingDispatchActivity extends AppCompatActivity implem
                     itemList.setItemDesc(ItemDesc);
                     itemList.setSkuCode(SKUCode);
                     itemList.setPickedQty(PickedQty);
+                    itemList.setOriginalPickedQty(PickedQty);
                     itemDetailsLists.add(itemList);
+                    originalItemList.add(itemList);
 
                 } catch (JSONException e) {
                     adapter.notifyDataSetChanged();
@@ -709,9 +713,6 @@ public class AssetPalletMappingDispatchActivity extends AppCompatActivity implem
     }
 
     public void setDefault() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
                 CURRENT_EPC = "";
                 IS_SCANNING_LOCKED = false;
                 allow_trigger_to_press = true;
@@ -721,9 +722,23 @@ public class AssetPalletMappingDispatchActivity extends AppCompatActivity implem
                 if (barcodes != null) {
                     barcodes.clear();
                 }
-                binding.recCount.setText("" + barcodeList.size());
-            }
-        });
+        binding.rvPallet.setAdapter(null);
+        itemDetailsLists.clear();
+        for (ItemDetailsList model : originalItemList) {
+            ItemDetailsList newModel = new ItemDetailsList();
+            newModel.setItemDesc(model.getItemDesc());
+            newModel.setSkuCode(model.getSkuCode());
+            newModel.setOriginalPickedQty(model.getOriginalPickedQty());
+            newModel.setPickedQty(model.getOriginalPickedQty());
+            newModel.setScannedQty("0");
+            newModel.setRemainingQty(model.getOriginalPickedQty());
+            itemDetailsLists.add(newModel);
+        }
+        adapter = new skuitemListAdapter(context, itemDetailsLists);
+        binding.rvPallet.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
+        binding.recCount.setText("" + barcodeList.size());
+
     }
 
     private ItemDetailsList getItemBySkuCode(String skuCode) {
@@ -764,7 +779,7 @@ public class AssetPalletMappingDispatchActivity extends AppCompatActivity implem
         dialogItem.setLayoutManager(new GridLayoutManager(context, 1));
         confirmationAdapter = new skuitemListAdapter(context, itemDetailsLists);
         confirmationAdapter.notifyDataSetChanged();
-        dialogItem.setAdapter(adapter);
+        dialogItem.setAdapter(confirmationAdapter);
         dialogButton.setText("YES");
         dialogButtonCancel.setText("NO");
         dialogButton.setOnClickListener(new View.OnClickListener() {

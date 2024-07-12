@@ -3,7 +3,7 @@ package com.psl.pallettracking.viewHolder;
 import com.psl.pallettracking.helper.DefaultConstants;
 
 public class ItemDetailsList {
-    private String serialNo, ItemDesc, SkuCode, PickedQty, ScannedQty, RemainingQty;
+    private String serialNo, ItemDesc, SkuCode, PickedQty, ScannedQty, RemainingQty, originalPickedQty, BatchID, BinName;
 
     public String getSerialNo() {
         return (serialNo != null) ? serialNo : "defaultSerialNo";
@@ -44,5 +44,23 @@ public class ItemDetailsList {
     }
     public void setRemainingQty(String RemainingQty) {
         this.RemainingQty = RemainingQty;
+    }
+    public String getOriginalPickedQty() {
+        return (originalPickedQty != null) ? originalPickedQty : "0";
+    }
+    public void setOriginalPickedQty(String originalPickedQty) {
+        this.originalPickedQty = originalPickedQty;
+    }
+    public String getBatchID() {
+        return (BatchID != null) ? BatchID : "";
+    }
+    public void setBatchID(String BatchID) {
+        this.BatchID = BatchID;
+    }
+    public String getBinName() {
+        return (BinName != null) ? BinName : "";
+    }
+    public void setBinName(String BinName) {
+        this.BinName = BinName;
     }
 }

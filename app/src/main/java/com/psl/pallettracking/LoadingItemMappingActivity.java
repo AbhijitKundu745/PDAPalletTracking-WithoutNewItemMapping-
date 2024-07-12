@@ -105,7 +105,7 @@ public class LoadingItemMappingActivity extends AppCompatActivity {
                         @Override
                         public void run() {
 
-                            Intent AssetPalletMappingIntent = new Intent(LoadingItemMappingActivity.this, AssetPalletMappingWithItemForDispatchActivity.class);
+                            Intent AssetPalletMappingIntent = new Intent(LoadingItemMappingActivity.this, AsssetPalletMappingWithItemForDispatchV1Activity.class);
                             AssetPalletMappingIntent.putExtra("DRN", DC_NO);
                             AssetPalletMappingIntent.putExtra("DC_TAG_ID", DC_TAG_ID);
                             //AssetPalletMappingIntent.putExtra("TruckNumber", SharedPreferencesManager.getTruckNumber(context));

@@ -20,6 +20,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SEUICAsset">
         <activity
+            android:name=".AsssetPalletMappingWithItemForDispatchV1Activity"
+            android:exported="false" />
+        <activity
             android:name=".AssetPalletMappingWithItemForDispatchActivity"
             android:exported="false" />
         <activity

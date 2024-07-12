@@ -889,8 +889,6 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                     orderList.add(binPartialPalletMappingCreationProcessModel);
                     originalOrderList.add(binPartialPalletMappingCreationProcessModel);
                     binObjectListForSourceSpinner.add(binPartialPalletMappingCreationProcessModel);
-
-
                 }
                 binList = db.getBinName();
                 if (binObjectListForSourceSpinner != null) {

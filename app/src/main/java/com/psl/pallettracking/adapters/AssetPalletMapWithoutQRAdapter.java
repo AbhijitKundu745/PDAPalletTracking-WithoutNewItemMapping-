@@ -8,6 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.psl.pallettracking.AssetPalletMappingActivity;
+import com.psl.pallettracking.AssetPalletMappingWithItemForDispatchActivity;
 import com.psl.pallettracking.AssetPalletWithItemActivity;
 import com.psl.pallettracking.R;
 
@@ -68,7 +69,7 @@ public class AssetPalletMapWithoutQRAdapter extends BaseAdapter {
             @Override
             public void onClick(View v) {
 
-                ((AssetPalletWithItemActivity) mContext).onListItemClicked(tagList.get(position));
+                ((AssetPalletMappingWithItemForDispatchActivity) mContext).onListItemClicked(tagList.get(position));
 
             }
         });
