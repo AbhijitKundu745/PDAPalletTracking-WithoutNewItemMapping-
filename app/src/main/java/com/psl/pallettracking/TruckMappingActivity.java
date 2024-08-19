@@ -401,6 +401,7 @@ public class TruckMappingActivity extends AppCompatActivity {
             public void run() {
                 TRUCK_TAG_ID = "";
                 CURRENT_EPC = "";
+                DC_NO = "";
                 IS_SCANNING_LOCKED = false;
                 IS_TRUCK_TAG_SCANNED = false;
                 binding.edtTruckID.setText("");

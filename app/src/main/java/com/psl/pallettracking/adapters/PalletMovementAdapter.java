@@ -102,7 +102,7 @@ public class PalletMovementAdapter extends RecyclerView.Adapter<RecyclerView.Vie
         }
 
         if ((position) % 2 == 0) {
-            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.red3));
+            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.cyan1));
         } else {
             itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.red5));
         }

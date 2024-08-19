@@ -27,6 +27,7 @@ import com.psl.pallettracking.adapters.CustomRecyclerViewDashboardAdapter;
 import com.psl.pallettracking.database.AssetMaster;
 import com.psl.pallettracking.database.DatabaseHandler;
 import com.psl.pallettracking.database.ProductMaster;
+import com.psl.pallettracking.database.SKUMaster;
 import com.psl.pallettracking.databinding.ActivityDashboardBinding;
 import com.psl.pallettracking.helper.APIConstants;
 import com.psl.pallettracking.helper.AppConstants;
@@ -413,6 +414,8 @@ public class DashboardActivity extends AppCompatActivity {
                 if (action.equalsIgnoreCase(APIConstants.K_ACTION_SYNC)) {
                     AssetUtils.showCommonBottomSheetSuccessDialog(context, "Asset Sync Done Successfully");
                 }
+                String apiUrl2= APIConstants.M_GET_ALL_SKU_DATA;
+                fetchSkuMaster( apiUrl2);
 
             } catch (JSONException e) {
                 AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.something_went_wrong_error));
@@ -435,5 +438,101 @@ public class DashboardActivity extends AppCompatActivity {
         batteryStatusHelper.temperature = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
         batteryStatusHelper.technology = batteryStatus.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY);
         return batteryStatusHelper;
+    }
+    public void fetchSkuMaster(String METHOD_NAME) {
+        OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
+                .connectTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                .readTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                .writeTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                .build();
+        Log.e("SKUMASTERURL", SharedPreferencesManager.getHostUrl(context) + METHOD_NAME );
+        //Log.e("ASSETMASTERREQ", request.toString() );
+        //AndroidNetworking.post(SharedPreferencesManager.getHostUrl(context) + METHOD_NAME + SharedPreferencesManager.getCustomerId(context)).addJSONObjectBody(request)
+        AndroidNetworking.get(SharedPreferencesManager.getHostUrl(context) + METHOD_NAME)
+                .setTag("test")
+                .setPriority(Priority.LOW)
+                .setOkHttpClient(okHttpClient) // passing a custom okHttpClient
+                .build()
+                .getAsJSONObject(new JSONObjectRequestListener() {
+                    @Override
+                    public void onResponse(JSONObject result) {
+
+                        if (result != null) {
+                            try {
+                                hideProgressDialog();
+                                Log.e("SKUMASTERRESULT", result.toString());
+                                if (result.has(APIConstants.K_STATUS)) {
+                                    if (result.getString(APIConstants.K_STATUS).equalsIgnoreCase("true")) {
+                                        JSONArray dataArray;
+                                        if (result.has(APIConstants.K_DATA)) {
+                                            dataArray = result.getJSONArray(APIConstants.K_DATA);
+                                            if (dataArray != null) {
+                                                if (dataArray.length() > 0) {
+                                                    List<SKUMaster> list = new ArrayList<>();
+                                                    if (dataArray.length() > 0) {
+                                                        try {
+                                                            for (int i = 0; i < dataArray.length(); i++) {
+                                                                SKUMaster skuMaster = new SKUMaster();
+                                                                JSONObject jsonObject = dataArray.getJSONObject(i);
+
+                                                                if (jsonObject.has("ItemName")) {
+                                                                    String iteName = jsonObject.getString("ItemName").trim();
+                                                                    skuMaster.setItemName(iteName);
+                                                                }
+
+                                                                if (jsonObject.has("ItemCode")) {
+                                                                    String skuCode = jsonObject.getString("ItemCode").trim();
+                                                                    skuMaster.setItemCode(skuCode);
+                                                                }
+                                                                list.add(skuMaster);
+                                                            }
+                                                            if(list.size()>0){
+                                                                db.deleteSKUMaster();
+                                                                db.storeSKUMaster(list);
+                                                            }
+
+                                                        } catch (JSONException e) {
+                                                            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.something_went_wrong_error));
+                                                        }
+                                                    } else {
+                                                        AssetUtils.showCommonBottomSheetErrorDialog(context, "No Asset Master Found");
+                                                    }
+                                                } else {
+                                                    AssetUtils.showCommonBottomSheetErrorDialog(context, "No Asset Master Found");
+                                                }
+                                            } else {
+                                                AssetUtils.showCommonBottomSheetErrorDialog(context, "No Asset Master Found");
+                                            }
+                                        }
+
+                                    } else {
+                                        String message = result.getString(APIConstants.K_MESSAGE);
+                                        AssetUtils.showCommonBottomSheetErrorDialog(context, message);
+                                    }
+                                }
+                            } catch (JSONException e) {
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.something_went_wrong_error));
+                            }
+                        } else {
+                            hideProgressDialog();
+                            // Toast.makeText(context,"Communication Error",Toast.LENGTH_SHORT).show();
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.communication_error));
+                        }
+                    }
+
+                    @Override
+                    public void onError(ANError anError) {
+                        hideProgressDialog();
+                        Log.e("ERROR", anError.getErrorDetail());
+                        if (anError.getErrorDetail().equalsIgnoreCase("responseFromServerError")) {
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.communication_error));
+                        } else if (anError.getErrorDetail().equalsIgnoreCase("connectionError")) {
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
+                        } else {
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
+                        }
+
+                    }
+                });
     }
 }

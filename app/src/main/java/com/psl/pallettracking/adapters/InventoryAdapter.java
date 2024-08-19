@@ -64,10 +64,10 @@ public class InventoryAdapter extends BaseAdapter {
         }
 */
         if (position%2!=0) {
-            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.red3));
+            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.cyan1));
         }
         else {
-            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.green1));
+            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.lemonyellow));
         }
 
         convertView.setOnClickListener(new View.OnClickListener() {

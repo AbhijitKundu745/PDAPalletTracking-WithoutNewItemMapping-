@@ -54,9 +54,9 @@ public class ItemMovementAdapter extends BaseAdapter {
 
         holder.textAssetName.setText((String) tagList.get(position).get("ASSETNAME"));
         if (position % 2 != 0) {
-            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.red3));
+            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.cyan1));
         } else {
-            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.green1));
+            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.lemonyellow));
         }
         if (tagList.get(position).get("STATUS").equalsIgnoreCase("false")) {
             convertView.setBackgroundColor(mContext.getResources().getColor(R.color.red));

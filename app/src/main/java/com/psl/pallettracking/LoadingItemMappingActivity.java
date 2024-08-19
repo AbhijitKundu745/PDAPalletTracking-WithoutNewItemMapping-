@@ -77,11 +77,7 @@ public class LoadingItemMappingActivity extends AppCompatActivity {
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
-
-                                Intent AssetPalletMappingIntent = new Intent(LoadingItemMappingActivity.this, AssetPalletMappingDispatchActivity.class);
-                                AssetPalletMappingIntent.putExtra("DRN", DC_NO);
-                                AssetPalletMappingIntent.putExtra("DC_TAG_ID", DC_TAG_ID);
-                                startActivity(AssetPalletMappingIntent);
+                                SyncSOLineItems(DC_NO, "WITH_QR");
                             }
                         }, 1000);
                     }
@@ -105,13 +101,7 @@ public class LoadingItemMappingActivity extends AppCompatActivity {
                         @Override
                         public void run() {
 
-                            Intent AssetPalletMappingIntent = new Intent(LoadingItemMappingActivity.this, AsssetPalletMappingWithItemForDispatchV1Activity.class);
-                            AssetPalletMappingIntent.putExtra("DRN", DC_NO);
-                            AssetPalletMappingIntent.putExtra("DC_TAG_ID", DC_TAG_ID);
-                            //AssetPalletMappingIntent.putExtra("TruckNumber", SharedPreferencesManager.getTruckNumber(context));
-                            //AssetPalletMappingIntent.putExtra("LocationName", SharedPreferencesManager.getLocationName(context));
-
-                            startActivity(AssetPalletMappingIntent);
+                            SyncSOLineItems(DC_NO, "WITHOUT_QR");
                         }
                     }, 1000);
 //                    } else{
@@ -474,6 +464,64 @@ public class LoadingItemMappingActivity extends AppCompatActivity {
             }
         });
         customConfirmationDialog.show();
+    }
+    private void SyncSOLineItems(String dcNo, String action)
+    {
+        if (cd.isConnectingToInternet()) {
+            try {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put(APIConstants.K_DC_TAG_ID, dcNo);
+
+                OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
+                            .connectTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                            .readTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                            .writeTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                            .build();
+
+                    AndroidNetworking.post(SharedPreferencesManager.getHostUrl(context) + APIConstants.M_GET_SO_LINE_ITEMS).addJSONObjectBody(jsonObject)
+                            .setTag("test")
+                            .setPriority(Priority.LOW)
+                            .setOkHttpClient(okHttpClient) // passing a custom okHttpClient
+                            .build().getAsJSONObject(new JSONObjectRequestListener() {
+                                @Override
+                                public void onResponse(JSONObject response) {
+
+                                    if (response != null) {
+                                        if (response.has(APIConstants.K_STATUS)) {
+                                                if(action.equals("WITH_QR")){
+                                                    Intent AssetPalletMappingIntent = new Intent(LoadingItemMappingActivity.this, AssetPalletMappingDispatchActivity.class);
+                                                    AssetPalletMappingIntent.putExtra("DRN", DC_NO);
+                                                    AssetPalletMappingIntent.putExtra("DC_TAG_ID", DC_TAG_ID);
+                                                    startActivity(AssetPalletMappingIntent);
+                                                }
+                                                else if(action.equals("WITHOUT_QR")){
+                                                    Intent AssetPalletMappingIntent = new Intent(LoadingItemMappingActivity.this, AsssetPalletMappingWithItemForDispatchV1Activity.class);
+                                                    AssetPalletMappingIntent.putExtra("DRN", DC_NO);
+                                                    AssetPalletMappingIntent.putExtra("DC_TAG_ID", DC_TAG_ID);
+                                                    startActivity(AssetPalletMappingIntent);
+                                                }
+                                        }
+                                    } else {
+                                        hideProgressDialog();
+                                        // Toast.makeText(context,"Communication Error",Toast.LENGTH_SHORT).show();
+                                        AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.communication_error));
+                                    }
+                                }
+
+                                @Override
+                                public void onError(ANError anError) {
+
+                                }
+                            });
+
+
+            } catch (Exception ex) {
+
+            }
+        } else {
+            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
+        }
+
     }
 
 }

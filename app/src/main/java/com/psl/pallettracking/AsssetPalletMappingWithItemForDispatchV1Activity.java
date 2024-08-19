@@ -385,7 +385,7 @@ public class AsssetPalletMappingWithItemForDispatchV1Activity extends AppCompatA
             JSONObject jsonObject = new JSONObject();
             jsonObject.put(APIConstants.K_DEVICE_ID, SharedPreferencesManager.getDeviceId(context));
             jsonObject.put(APIConstants.K_DC_NO, DC_NO);
-            jsonObject.put("Type", "WITHOUTQR");
+            jsonObject.put("Type", "DISPATCH_WITHOUTQR");
             Log.e("JSONReq", SharedPreferencesManager.getHostUrl(context) + APIConstants.M_GET_SKU_DETAILS);
             Log.e("JSONReq1", jsonObject.toString());
             OkHttpClient okHttpClient = new OkHttpClient().newBuilder()

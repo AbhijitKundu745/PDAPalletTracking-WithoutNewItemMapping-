@@ -1,6 +1,7 @@
 package com.psl.pallettracking.adapters;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import android.widget.TextView;
 import com.psl.pallettracking.AssetPalletMappingActivity;
 import com.psl.pallettracking.ItemMovementActivity;
 import com.psl.pallettracking.R;
+import com.psl.pallettracking.database.DatabaseHandler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,11 +20,13 @@ public class AssetPalletMapAdapter extends BaseAdapter {
     private LayoutInflater mInflater;
     public ArrayList<HashMap<String, String>> tagList;
     private Context mContext;
+    DatabaseHandler db;
 
     public AssetPalletMapAdapter(Context context, ArrayList<HashMap<String, String>> tagList) {
         this.mInflater = LayoutInflater.from(context);
         this.tagList = tagList;
         this.mContext = context;
+        db = new DatabaseHandler(mContext);
     }
 
     public int getCount() {
@@ -51,12 +55,32 @@ public class AssetPalletMapAdapter extends BaseAdapter {
         } else {
             holder = (AssetPalletMapAdapter.ViewHolder) convertView.getTag();
         }
+        String tag = tagList.get(position).get("ASSETNAME").toString();
+        String[] parts;
+        String SerialNo = "";
+        String skuCode = "";
+        String ItemName = "";
+        if (tag.contains(",")) {
+            parts = tag.split("[,]+");
+            skuCode = parts[1].trim().replaceAll("^0*", "");
+            SerialNo = parts[0].trim().replaceAll("^0*", "");
+            ItemName = db.getItemNameByItemCode(skuCode);
+            Log.e("Ite", ItemName);
+            Log.e("SKU", skuCode);
+        } else if (tag.contains(" ")) {
+            parts = tag.split("\\s+");
+            skuCode = parts[2].trim();
+            SerialNo = parts[1].trim();
+            ItemName = db.getItemNameByItemCode(skuCode);
+            Log.e("Ite", ItemName);
+            Log.e("SKU", skuCode);
+        }
 
-        holder.textAssetName.setText((String) tagList.get(position).get("ASSETNAME"));
+        holder.textAssetName.setText(SerialNo+","+ItemName);
         if (position % 2 != 0) {
-            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.red3));
+            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.cyan1));
         } else {
-            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.green1));
+            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.lemonyellow));
         }
         if (tagList.get(position).get("STATUS").equalsIgnoreCase("false")) {
             convertView.setBackgroundColor(mContext.getResources().getColor(R.color.red));

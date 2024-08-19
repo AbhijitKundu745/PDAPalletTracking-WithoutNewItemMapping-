@@ -64,11 +64,11 @@ public class AssetPalletWithItemDispatchAdapter extends RecyclerView.Adapter<Rec
         if ((position) % 2 == 0) {
             itemViewHolder.itemSKU.setTextColor(context.getResources().getColor(R.color.black));
             itemViewHolder.itemScannedQty.setTextColor(context.getResources().getColor(R.color.black));
-            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.red3));
+            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.cyan1));
         } else {
             itemViewHolder.itemSKU.setTextColor(context.getResources().getColor(R.color.black));
             itemViewHolder.itemScannedQty.setTextColor(context.getResources().getColor(R.color.black));
-            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.green1));
+            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.lemonyellow));
         }
 //        itemViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
 //            @Override

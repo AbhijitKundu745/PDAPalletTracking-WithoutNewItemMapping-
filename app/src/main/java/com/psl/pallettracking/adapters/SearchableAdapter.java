@@ -47,9 +47,9 @@ public class SearchableAdapter extends BaseAdapter implements Filterable {
             LayoutInflater inflater = LayoutInflater.from(context);
             convertView = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
             if (position % 2 != 0) {
-                convertView.setBackgroundColor(context.getResources().getColor(R.color.red3));
+                convertView.setBackgroundColor(context.getResources().getColor(R.color.cyan1));
             } else {
-                convertView.setBackgroundColor(context.getResources().getColor(R.color.green1));
+                convertView.setBackgroundColor(context.getResources().getColor(R.color.lemonyellow));
             }
         }
 

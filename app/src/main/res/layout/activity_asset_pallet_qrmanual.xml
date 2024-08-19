@@ -104,7 +104,7 @@
             <View
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
-                android:layout_weight="0.5"/>
+                android:layout_weight="0.2"/>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -145,7 +145,7 @@
             <View
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
-                android:layout_weight="0.5"/>
+                android:layout_weight="0.2"/>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -161,7 +161,7 @@
                 android:layout_marginTop="10dp"
                 android:background="@drawable/edittext_grey_background"
                 android:layout_height="0dp"
-                android:layout_weight="1">
+                android:layout_weight="1.2">
                 <androidx.appcompat.widget.AppCompatEditText
                     android:id="@+id/edtQrCode"
                     android:layout_width="0dp"
@@ -186,7 +186,40 @@
             <View
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
-                android:layout_weight="0.5"/>
+                android:layout_weight="0.2"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/orange"
+                android:textSize="18sp"
+                android:visibility="visible"
+                android:text="Item Name: "
+                android:textStyle="bold"/>
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:orientation="horizontal"
+                android:padding="1dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/edittext_grey_background"
+                android:layout_height="0dp"
+                android:layout_weight="1.2">
+                <androidx.appcompat.widget.AppCompatEditText
+                    android:id="@+id/edtskuName"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="match_parent"
+                    android:paddingLeft="10dp"
+                    android:editable="false"
+                    android:enabled="false"
+                    android:textColor="@color/black"
+                    android:digits="0123456789"
+                    android:hint="Item Name"
+                    android:background="@color/white"/>
+            </androidx.appcompat.widget.LinearLayoutCompat>
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="0.2"/>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

@@ -31,6 +31,7 @@ import com.psl.pallettracking.database.DatabaseHandler;
 import com.psl.pallettracking.databinding.ActivityAssetPalletMappingBinding;
 import com.psl.pallettracking.databinding.ActivityItemMovementBinding;
 import com.psl.pallettracking.helper.APIConstants;
+import com.psl.pallettracking.helper.AppConstants;
 import com.psl.pallettracking.helper.AssetUtils;
 import com.psl.pallettracking.helper.ConnectionDetector;
 import com.psl.pallettracking.helper.SharedPreferencesManager;
@@ -312,16 +313,26 @@ public class ItemMovementActivity extends AppCompatActivity implements DecodeInf
                                 // First pallet tag scan
                                 SOURCE_PALLET_TAG_ID = CURRENT_EPC;
                                 String SourcePalletName = db.getProductNameByProductTagId(SOURCE_PALLET_TAG_ID);
-                                binding.edtSourcePalletNumber.setText(SourcePalletName);
-                                IS_SOURCE_PALLET_TAG_SCANNED = true;
-                                Log.e("SourcePallet", SOURCE_PALLET_TAG_ID);
+                                if(!SourcePalletName.equalsIgnoreCase(AppConstants.UNKNOWN_ASSET)){
+                                    binding.edtSourcePalletNumber.setText(SourcePalletName);
+                                    IS_SOURCE_PALLET_TAG_SCANNED = true;
+                                    Log.e("SourcePallet", SOURCE_PALLET_TAG_ID);
+                                }
+                                else{
+                                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan another Pallet");
+                                }
                             } else if (!IS_DEST_PALLET_TAG_SCANNED) {
                                 // Second pallet tag scan
                                 DEST_PALLET_TAG_ID = CURRENT_EPC;
                                 String DestPalletName = db.getProductNameByProductTagId(DEST_PALLET_TAG_ID);
-                                binding.edtDestPalletNumber.setText(DestPalletName);
-                                IS_DEST_PALLET_TAG_SCANNED = true;
-                                Log.e("DestPallet", DEST_PALLET_TAG_ID);
+                                if(!DestPalletName.equalsIgnoreCase(AppConstants.UNKNOWN_ASSET)){
+                                    binding.edtDestPalletNumber.setText(DestPalletName);
+                                    IS_DEST_PALLET_TAG_SCANNED = true;
+                                    Log.e("DestPallet", DEST_PALLET_TAG_ID);
+                                }
+                                else{
+                                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan another Pallet");
+                                }
                             }
                     } else if (assettpid.equalsIgnoreCase("03")) {
                         if (!IS_SOURCE_BIN_TAG_SCANNED) {

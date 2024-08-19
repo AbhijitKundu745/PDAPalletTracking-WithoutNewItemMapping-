@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DatabaseHandler extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 18;
+    private static final int DATABASE_VERSION = 19;
     private static final String DATABASE_NAME = "PSL_PALLET_TRACKING-DB";
 
     private static final String TABLE_ASSET_MASTER = "Asset_Master_Table";
@@ -33,12 +33,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String TABLE_ROOM_MASTER = "Room_Master_Table";
     private static final String TABLE_LOST_ASSET_MASTER = "Lost_Asset_Master_Table";
     private static final String TABLE_DASHBOARD_MENU = "Dashboard_Menu_Table";
-
-
     private static final String TABLE_TAG_MASTER = "Tag_Master_Table";
     private static final String TABLE_OFFLINE_TAG_MASTER = "Offline_Tag_Master_Table";
     private static final String TABLE_OFFLINE_TAG_WITH_DESTINATION = "Offline_Tag_Table_With_Destination";
     private static final String TABLE_PARTIAL_DISPATCH = "dispatch_pallet_data";
+    private static final String TABLE_SKU_MASTER = "sku_master";
+
+
     private static final String KEY_ID = "id";
     private static final String KEY_JSON_DATA = "KEY_JSON_DATA";
     private static final String K_DASHBOARD_MENU_ID = "K_DASHBOARD_MENU_ID";
@@ -79,6 +80,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     private static final String K_TAG_TYPE = "K_TAG_TYPE";
     private static final String K_DATE_TIME = "K_DATE_TIME";
+    private static final String K_ITEM_NAME = "K_ITEM_NAME";
+    private static final String K_ITEM_CODE = "K_ITEM_CODE";
 
 
     public DatabaseHandler(Context context) {
@@ -188,6 +191,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 + K_WORK_ORDER_TYPE + " TEXT,"//1
                 + K_DATE_TIME + " TEXT"//1
                 + ")";
+        String CREATE_SKU_MASTER_TABLE = "CREATE TABLE "
+                + TABLE_SKU_MASTER
+                + "("
+                + K_ITEM_NAME + " TEXT,"//0
+                + K_ITEM_CODE + " TEXT UNIQUE"//1
+                + ")";
+
 
         db.execSQL(CREATE_ASSET_MASTER_TABLE);
         db.execSQL(CREATE_ASSET_TYPE_MASTER_TABLE);
@@ -201,6 +211,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.execSQL(CREATE_OFFLINE_TAG_MASTER_TABLE);
         db.execSQL(CREATE_DISPATCH_PALLET_TABLE);
         db.execSQL(CREATE_OFFLINE_TAG_WITH_DESTINATION_TABLE);
+        db.execSQL(CREATE_SKU_MASTER_TABLE);
 
     }
 
@@ -220,6 +231,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_PARTIAL_DISPATCH);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_OFFLINE_TAG_WITH_DESTINATION);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SKU_MASTER);
         // Create tables again
         onCreate(db);
     }
@@ -2000,5 +2012,89 @@ try{
             } while (cursor.moveToNext());
         }
         return binDetails;
+    }
+    public void deleteSKUMaster() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_SKU_MASTER, null, null);
+        db.close();
+    }
+
+    public void storeSKUMaster(List<SKUMaster> lst) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String sql = "INSERT OR REPLACE INTO sku_master (K_ITEM_NAME,K_ITEM_CODE) VALUES (? ,?)";
+        db.beginTransactionNonExclusive();
+        SQLiteStatement stmt = db.compileStatement(sql);
+        try {
+            for (int i = 0; i < lst.size(); i++) {
+                stmt.bindString(1, ""+lst.get(i).getItemName());
+                stmt.bindString(2, lst.get(i).getItemCode());
+                stmt.execute();
+                stmt.clearBindings();
+            }
+            db.setTransactionSuccessful();
+            // db.endTransaction();
+        } catch (Exception e) {
+            Log.e("SKUMASTEREXC", e.getMessage());
+        } finally {
+            if (db != null) {
+                db.endTransaction();
+            }
+        }
+    }
+    public boolean isSKUExist(String skuCode) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+
+        try {
+            // Define the condition
+            String condition = K_ITEM_CODE + " = ?";
+            String[] selectionArgs = {skuCode};
+
+            // Query the database
+            cursor = db.query(
+                    TABLE_SKU_MASTER,
+                    null, // Columns (null means all columns)
+                    condition,
+                    selectionArgs,
+                    null, // groupBy
+                    null, // having
+                    null // orderBy
+            );
+
+            // Check if there are any rows
+            return cursor != null && cursor.getCount() > 0;
+        } catch (Exception e) {
+            Log.e("SKUMASTEREXC", e.getMessage());
+            return false;
+        } finally {
+            // Close the cursor and database
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.close();
+        }
+    }
+    public String getItemNameByItemCode(String skuCode) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_SKU_MASTER, new String[]{K_ITEM_NAME}, K_ITEM_CODE + "='" + skuCode + "'", null, null, null, null);
+        System.out.println("Cursor" + cursor.getCount());
+        try {
+            if (cursor == null || cursor.getCount() == 0) {
+                return AppConstants.UNKNOWN_ASSET;
+            } else {
+                if (cursor.getCount() > 0) {
+                    //PID Note
+                    cursor.moveToFirst();
+                    return cursor.getString(cursor.getColumnIndexOrThrow(K_ITEM_NAME));
+                } else {
+                    //PID Not Found
+                    return AppConstants.UNKNOWN_ASSET;
+                }
+            }
+        } catch (Exception e) {
+            return AppConstants.UNKNOWN_ASSET;
+        } finally {
+            cursor.close();
+        }
     }
 }

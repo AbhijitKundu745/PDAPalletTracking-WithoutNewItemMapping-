@@ -20,6 +20,7 @@ public class APIConstants {
  public static final String M_UPLOAD_ITEM_MOVEMENT = "/PDA/ItemMovementTransaction";
  public static final String M_UPLOAD_ITEM_QR_MANUAL = "/PDA/InsertTransactionForQRManual";
 
+
     public static final String M_GET_ASSET_MASTER = "/PDA/GetAllAssetsMobile?tenantID=";
     public static final String M_GET_ROOM_MASTER = "/PDA/GetAllRooms?tenantID=";
     public static final String M_GET_LOST_ASSET_MASTER = "/PDA/GetLostAssets?tenantID=";
@@ -28,6 +29,8 @@ public class APIConstants {
  public static final String M_GET_WORK_ORDER_DETAILS_FOR_PDA = "/PDA/GetWorkorderListForPDA";
  public static final String M_POST_CURRENT_PALLET = "/PDA/UploadCurrentPallet";
  public static final String M_GET_SKU_DETAILS = "/PDA/GetSKUDetailsForPDA";
+ public static final String M_GET_ALL_SKU_DATA = "/PDA/GetAllSKUsPDA";
+ public static final String M_GET_SO_LINE_ITEMS = "/PDA/GetSOLineItemsLoading";
 
 
 

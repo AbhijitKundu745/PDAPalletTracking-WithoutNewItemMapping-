@@ -92,13 +92,13 @@ public class skuitemListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             itemViewHolder.itemPickedQty.setTextColor(context.getResources().getColor(R.color.black));
             itemViewHolder.itemScannedQty.setTextColor(context.getResources().getColor(R.color.black));
             itemViewHolder.itemRemainingQty.setTextColor(context.getResources().getColor(R.color.wine));
-            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.red3));
+            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.cyan1));
         } else {
             itemViewHolder.itemSKU.setTextColor(context.getResources().getColor(R.color.black));
             itemViewHolder.itemPickedQty.setTextColor(context.getResources().getColor(R.color.black));
             itemViewHolder.itemScannedQty.setTextColor(context.getResources().getColor(R.color.black));
             itemViewHolder.itemRemainingQty.setTextColor(context.getResources().getColor(R.color.wine));
-            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.green1));
+            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.lemonyellow));
         }
     }
     public void filter(String searchText) {

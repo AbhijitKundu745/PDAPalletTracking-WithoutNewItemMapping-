@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.androidnetworking.AndroidNetworking;
@@ -28,11 +29,13 @@ import com.androidnetworking.interfaces.JSONObjectRequestListener;
 import com.psl.pallettracking.database.DatabaseHandler;
 import com.psl.pallettracking.databinding.ActivityAssetPalletQrmanualBinding;
 import com.psl.pallettracking.helper.APIConstants;
+import com.psl.pallettracking.helper.AppConstants;
 import com.psl.pallettracking.helper.AssetUtils;
 import com.psl.pallettracking.helper.ConnectionDetector;
 import com.psl.pallettracking.helper.SharedPreferencesManager;
 import com.psl.pallettracking.rfid.RFIDInterface;
 import com.psl.pallettracking.rfid.SeuicGlobalRfidHandler;
+import com.psl.pallettracking.viewHolder.ItemDetailsList;
 import com.seuic.scanner.DecodeInfo;
 import com.seuic.scanner.DecodeInfoCallBack;
 import com.seuic.scanner.Scanner;
@@ -75,7 +78,14 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
     Scanner scanner;
     String DC_NO = "";
     String processType = null;
-    String Qty  = "";
+    String Qty  = "0";
+    List<ItemDetailsList> itemDetailsLists, originalItemList;
+    private String Password = "PASSRECEIVING007";
+    private int EXCEEDED_QTY = 0;
+    private String DIFF_SKU = "";
+    private String EXCEEDED_SKU = "";
+    private String skuCode = "";
+    private int quantity = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,7 +109,11 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
         setDefault();
         mediaPlayer = MediaPlayer.create(context, R.raw.beep);
         mediaPlayerErr = MediaPlayer.create(context,R.raw.error);
-
+        if (itemDetailsLists != null) {
+            itemDetailsLists.clear();
+        }
+        itemDetailsLists = new ArrayList<>();
+        originalItemList = new ArrayList<>();
         SharedPreferencesManager.setPower(context, 10);
 
 
@@ -108,11 +122,30 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
             @Override
             public void onClick(View v) {
                 Qty = binding.edtQty.getText().toString();
+                quantity = Qty.isEmpty() || Qty == null ? 0 : Integer.parseInt(Qty);
                 Log.e("QTY", Qty);
+                Log.e("QTY1", String.valueOf(quantity) );
+
                 if(IS_PALLET_TAG_SCANNED){
                     if (IS_QR_CODE_SCANNED) {
-                        if(!TextUtils.isEmpty(Qty) || !Qty.equalsIgnoreCase("0")){
-                            showCustomConfirmationDialog("Are you sure you want to upload", "UPLOAD");
+                        if(quantity != 0){
+                            ItemDetailsList item = getItemBySkuCode(skuCode);
+                            if (item != null) {
+                                int scannedQty = 0;
+                                if (Integer.parseInt(item.getPickedQty()) >= quantity) {
+                                    showCustomConfirmationDialog("Are you sure you want to upload", "UPLOAD");
+                                } else {
+                                    int pickedQty = Integer.parseInt(item.getPickedQty());
+                                    pickedQty = pickedQty <= 0 ? 0 : pickedQty;
+                                    EXCEEDED_QTY = quantity - pickedQty;
+                                    EXCEEDED_SKU = skuCode;
+                                    String EXCEEDED_SKU_NAME = db.getItemNameByItemCode(EXCEEDED_SKU);
+                                    showCustomConfirmationDialogForSpecial("Do you want to save excess "+EXCEEDED_QTY+" quantity for \n"+"SKU:"+EXCEEDED_SKU_NAME+" ?", "UPLOAD");
+                                }
+                            } else {
+                                DIFF_SKU = db.getItemNameByItemCode(skuCode);
+                                showCustomConfirmationDialogForSpecial("Do you want to save the different SKU?\n"+"SKU: "+DIFF_SKU, "UPLOAD");
+                            }
                         }
                         else{
                             showCommonBottomSheetErrorDialog(context, "Please enter a valid quantity");
@@ -291,9 +324,14 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
                             Log.e("SharedCompanyCode", SharedPreferencesManager.getCompanyCode(context));
                             if (assettpid.equalsIgnoreCase("02")) {//||assettpid.equalsIgnoreCase("03")) {
                                 PALLET_TAG_ID = CURRENT_EPC;
-                                binding.edtRfidNumber.setText(PALLET_TAG_ID);
-                                binding.edtRfidNumber.setText(db.getProductNameByProductTagId(PALLET_TAG_ID));
-                                IS_PALLET_TAG_SCANNED = true;
+                                //binding.edtRfidNumber.setText(PALLET_TAG_ID);
+                                String PalletName = db.getProductNameByProductTagId(PALLET_TAG_ID);
+                                if(!PalletName.equalsIgnoreCase(AppConstants.UNKNOWN_ASSET)){
+                                    binding.edtRfidNumber.setText(PalletName);
+                                    IS_PALLET_TAG_SCANNED = true;
+                                } else{
+                                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Invalid Pallet Name. Please scan another Pallet");
+                                }
                             } else {
                                     AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan a pallet tag");
                             }
@@ -327,9 +365,10 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                getSKUDetails(DC_NO);
                 PALLET_TAG_ID = "";
                 QR_CODE = "";
-                Qty = "";
+                Qty = "0";
                 CURRENT_EPC = "";
                 IS_SCANNING_LOCKED = false;
                 IS_SCANNING_ALREADY_STARTED = false;
@@ -339,9 +378,14 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
                 binding.edtQrCode.setText("");
                 binding.batchID.setText("");
                 binding.edtQty.setText("");
+                binding.edtskuName.setText("");
                 allow_trigger_to_press = true;
                 IS_PALLET_TAG_SCANNED = false;
                 IS_QR_CODE_SCANNED = false;
+                EXCEEDED_QTY = 0;
+                EXCEEDED_SKU = "";
+                DIFF_SKU = "";
+                quantity = 0;
                 if (epcs != null) {
                     epcs.clear();
                 }
@@ -440,7 +484,7 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
 
         rfidHandler.onPause();
     }
-    Dialog customConfirmationDialog;
+    Dialog customConfirmationDialog, customConfirmationDialogSpec;
 
     public void showCustomConfirmationDialog(String msg, final String action) {
         if (customConfirmationDialog != null) {
@@ -478,6 +522,11 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
             @Override
             public void onClick(View v) {
                 customConfirmationDialog.dismiss();
+                Qty = "0";
+                EXCEEDED_QTY = 0;
+                EXCEEDED_SKU = "";
+                quantity = 0;
+            DIFF_SKU = "";
             }
         });
         customConfirmationDialog.show();
@@ -652,21 +701,31 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
         allow_trigger_to_press = true;
         String[] parts;
         parts = Qrcode.split("[,\\s]+");
+        String batchID = "";
         if (parts.length >3 && parts.length<6) {
-            binding.edtQrCode.setText(Qrcode);
             QR_CODE = Qrcode;
-            IS_QR_CODE_SCANNED = true;
+
             if(Qrcode.contains(",")){
                 parts = Qrcode.split("[,]+");
-                String batchID = parts[3].trim().replaceAll("^0*", "");
+                batchID = parts[3].trim().replaceAll("^0*", "");
+                skuCode = parts[1].trim().replaceAll("^0*", "");
                 Log.e("BatchID", batchID);
-                binding.batchID.setText(batchID);
+
             }
             else if(Qrcode.contains(" ")){
                 parts = Qrcode.split("[\\s]+");
-                String batchID = parts[4].trim();
+                batchID = parts[4].trim();
+                skuCode = parts[2].trim();
                 Log.e("BatchID", batchID);
+            }
+            if(db.isSKUExist(skuCode)){
+                IS_QR_CODE_SCANNED = true;
+                binding.edtQrCode.setText(Qrcode);
                 binding.batchID.setText(batchID);
+                binding.edtskuName.setText(db.getItemNameByItemCode(skuCode));
+            }
+            else{
+                AssetUtils.showCommonBottomSheetErrorDialog(context, skuCode+" doesn't exist. Please contact admin.");
             }
 
             try {
@@ -676,7 +735,7 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
-            END_DATE = AssetUtils.getCurrentSystemDate();
+            END_DATE = AssetUtils.getSystemDateTimeInFormatt();
         }
         else {
             // Barcode format does not match, handle accordingly
@@ -688,5 +747,151 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
     public void onBackPressed() {
         showCustomConfirmationDialog("Do you want to go back?", "BACK");
         //super.onBackPressed();
+    }
+    private void getSKUDetails(String DC_NO) {
+
+        try {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put(APIConstants.K_DEVICE_ID, SharedPreferencesManager.getDeviceId(context));
+            jsonObject.put(APIConstants.K_DC_NO, DC_NO);
+            jsonObject.put("Type", "RECEIVING_QR");
+            Log.e("JSONReq", SharedPreferencesManager.getHostUrl(context) + APIConstants.M_GET_SKU_DETAILS);
+            Log.e("JSONReq1", jsonObject.toString());
+            OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
+                    .connectTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                    .readTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                    .writeTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                    .build();
+            AndroidNetworking.post(SharedPreferencesManager.getHostUrl(context) + APIConstants.M_GET_SKU_DETAILS).addJSONObjectBody(jsonObject)
+                    .setTag("test")
+                    .setPriority(Priority.LOW)
+                    .setOkHttpClient(okHttpClient) // passing a custom okHttpClient
+                    .build()
+                    .getAsJSONObject(new JSONObjectRequestListener() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            Log.e("Response", response.toString());
+                            if (response != null) {
+                                try {
+                                    if (response.getBoolean("status")) {
+                                        JSONArray dataArray = response.getJSONArray("data");
+                                        parseSKUDetails(dataArray);
+                                    } else {
+                                        String message = response.getString("message");
+                                        AssetUtils.showCommonBottomSheetErrorDialog(context, message);
+                                    }
+                                } catch (JSONException e) {
+                                    AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.communication_error));
+                                }
+                            } else {
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.communication_error));
+                            }
+                        }
+
+                        @Override
+                        public void onError(ANError anError) {
+                           /* String orderDetailsString = AssetUtils.getJsonFromAssets(context, "updateworkorderstatus.json");
+                            try {
+                                JSONObject mainObject = new JSONObject(orderDetailsString);
+                                parseWorkDetailsObjectAndDoAction(mainObject);
+                            } catch (JSONException e) {
+                                throw new RuntimeException(e);
+                            }*/
+                            if (anError.getErrorDetail().equalsIgnoreCase("responseFromServerError")) {
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.communication_error));
+                            } else if (anError.getErrorDetail().equalsIgnoreCase("connectionError")) {
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
+                            } else {
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
+                            }
+                        }
+                    });
+        } catch (JSONException e) {
+            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
+        }
+    }
+
+    private void parseSKUDetails(JSONArray dataArray) {
+        if (itemDetailsLists != null) {
+            itemDetailsLists.clear();
+
+        }
+        if (dataArray.length() > 0) {
+            for (int i = 0; i < dataArray.length(); i++) {
+                try {
+                    ItemDetailsList itemList = new ItemDetailsList();
+                    JSONObject dataObject = dataArray.getJSONObject(i);
+                    String SKUCode = dataObject.getString("SkuCode");
+                    String ItemDesc = dataObject.getString("ItemDesc");
+                    String PickedQty = dataObject.getString("PickedQty");
+                    itemList.setItemDesc(ItemDesc);
+                    itemList.setSkuCode(SKUCode);
+                    itemList.setPickedQty(PickedQty);
+                    itemList.setOriginalPickedQty(PickedQty);
+                    itemDetailsLists.add(itemList);
+                    originalItemList.add(itemList);
+
+                } catch (JSONException e) {
+                    AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
+                }
+            }
+        }
+    }
+    public void showCustomConfirmationDialogForSpecial(String msg, final String action) {
+        if (customConfirmationDialogSpec != null) {
+            customConfirmationDialogSpec.dismiss();
+        }
+        customConfirmationDialogSpec = new Dialog(context);
+        if (customConfirmationDialogSpec != null) {
+            customConfirmationDialogSpec.dismiss();
+        }
+        customConfirmationDialogSpec.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        customConfirmationDialogSpec.setCancelable(false);
+        customConfirmationDialogSpec.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        customConfirmationDialogSpec.setContentView(R.layout.custom_alert_dialog_layout5);
+        TextView text = (TextView) customConfirmationDialogSpec.findViewById(R.id.text_dialog);
+        text.setText(msg);
+        Button dialogButton = (Button) customConfirmationDialogSpec.findViewById(R.id.btnUpload);
+        Button dialogButtonCancel = (Button) customConfirmationDialogSpec.findViewById(R.id.btnCancel);
+        EditText dialogPassword = (EditText) customConfirmationDialogSpec.findViewById(R.id.password);
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                customConfirmationDialogSpec.dismiss();
+                if (action.equals("UPLOAD")) {
+                    if (!dialogPassword.getText().toString().equals("")) {
+                        Log.e("Password", dialogPassword.getText().toString());
+                        if (dialogPassword.getText().toString().equals(Password)) {
+                            allow_trigger_to_press = false;
+                            uploadInventoryToServer();
+                        } else {
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, "Please enter a valid password to proceed");
+                        }
+                    } else {
+                        AssetUtils.showCommonBottomSheetErrorDialog(context, "Please enter a valid password to proceed");
+                    }
+                }
+            }
+        });
+        dialogButtonCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                customConfirmationDialogSpec.dismiss();
+                Qty = "0";
+                EXCEEDED_QTY = 0;
+                EXCEEDED_SKU = "";
+                quantity = 0;
+            }
+        });
+        // customConfirmationDialog.getWindow().getAttributes().windowAnimations = R.style.SlideBottomUpAnimation;
+        customConfirmationDialogSpec.show();
+    }
+    private ItemDetailsList getItemBySkuCode(String skuCode) {
+        for (ItemDetailsList item : itemDetailsLists) {
+            if (item.getSkuCode().equals(skuCode)) {
+                return item;
+            }
+        }
+        return null;
     }
 }

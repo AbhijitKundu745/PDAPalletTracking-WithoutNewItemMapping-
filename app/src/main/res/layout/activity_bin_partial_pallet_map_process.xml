@@ -294,7 +294,6 @@
                 android:textColor="@color/white" />
 
         </androidx.appcompat.widget.LinearLayoutCompat>
-
         <LinearLayout
             android:id="@+id/llPicked"
             android:layout_width="match_parent"
@@ -406,7 +405,19 @@
             android:layout_height="40dp"
             android:layout_gravity="bottom"
             android:layout_marginTop="1dp">
-
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnRefresh"
+                android:layout_width="0dp"
+                android:layout_weight="0.5"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:background="@drawable/round_button_blue"
+                android:gravity="center"
+                android:text="Refresh"
+                android:textAlignment="center"
+                android:textColor="@color/white" />
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnBack"
                 android:layout_width="0dp"
@@ -419,7 +430,8 @@
                 android:gravity="center"
                 android:text="Back"
                 android:textAlignment="center"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:visibility="gone"/>
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnClear"
                 android:layout_width="0dp"

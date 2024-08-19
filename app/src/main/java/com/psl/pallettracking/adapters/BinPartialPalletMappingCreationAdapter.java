@@ -70,9 +70,9 @@ public class BinPartialPalletMappingCreationAdapter extends RecyclerView.Adapter
         }
 
         if ((position) % 2 == 0) {
-            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.red3));
+            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.cyan1));
         } else {
-            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.green1));
+            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.lemonyellow));
         }
         itemViewHolder.btnProceed.setOnClickListener(new View.OnClickListener() {
             @Override

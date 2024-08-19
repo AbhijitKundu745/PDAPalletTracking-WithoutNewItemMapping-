@@ -26,6 +26,7 @@
     <color name="boh">#FCAA1B</color>
     <color name="foh">#39B54A</color>
     <color name="default_color">#FFFFFF</color>
+    <color name="cyan1">#809FFF</color>
 
     <!-- Default Colors -->
     <color name="colorbutton">#273c88</color>
@@ -74,7 +75,7 @@
     <color name="gold">#FFD700</color>
     <color name="green">#55C555</color>
     <color name="greend">#00ff00</color>
-    <color name="greenq">#55C555</color>
+    <color name="greenq">#FF9F99</color>
     <color name="green1">#22008000</color>
     <color name="green2">#88008000</color>
     <color name="green3">#aa008000</color>

@@ -92,12 +92,12 @@ public class AssetUtils {
         return workOrderListItemList;
     }
 
-    public static BinPartialPalletMappingCreationProcessModel getItemObject(String itemDesc, String binName, List<BinPartialPalletMappingCreationProcessModel> workOrderListItemList) {
+    public static BinPartialPalletMappingCreationProcessModel getItemObject(String itemDesc, String binName, String itemID, List<BinPartialPalletMappingCreationProcessModel> workOrderListItemList) {
         BinPartialPalletMappingCreationProcessModel obj = null;
         if (workOrderListItemList != null) {
             for (BinPartialPalletMappingCreationProcessModel item : workOrderListItemList) {
                 // Check if the string is equal to any of the fields of the current item
-                if (itemDesc.equals(item.getBinDescription()) && binName.equals(item.getBinNumber())) {
+                if (itemDesc.equals(item.getBinDescription()) && binName.equals(item.getBinNumber()) && itemID.equals(item.getItemID())) {
                     // If found, retrieve the loadingAreaTagId and break the loop
                     obj = item;
                     break;

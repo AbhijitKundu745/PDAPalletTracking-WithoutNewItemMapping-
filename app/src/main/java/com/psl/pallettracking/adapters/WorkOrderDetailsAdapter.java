@@ -147,14 +147,14 @@ public class WorkOrderDetailsAdapter extends RecyclerView.Adapter<RecyclerView.V
     itemViewHolder.itemPickup.setTextColor(context.getResources().getColor(R.color.black));
     itemViewHolder.itemWOType.setTextColor(context.getResources().getColor(R.color.black));
     itemViewHolder.itemStatus.setTextColor(context.getResources().getColor(R.color.black));
-            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.red3));
+            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.cyan1));
         } else {
     itemViewHolder.itemSerialNo.setTextColor(context.getResources().getColor(R.color.black));
     itemViewHolder.itemPalletNo.setTextColor(context.getResources().getColor(R.color.black));
     itemViewHolder.itemPickup.setTextColor(context.getResources().getColor(R.color.black));
     itemViewHolder.itemWOType.setTextColor(context.getResources().getColor(R.color.black));
     itemViewHolder.itemStatus.setTextColor(context.getResources().getColor(R.color.black));
-            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.green1));
+            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.lemonyellow));
         }
     }
 

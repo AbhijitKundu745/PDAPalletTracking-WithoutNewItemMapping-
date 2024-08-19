@@ -77,10 +77,10 @@ public class InventoryDetailsAdapter extends BaseAdapter {
 */
 
         if (position%2!=0) {
-            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.red3));
+            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.cyan1));
         }
         else {
-            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.green1));
+            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.lemonyellow));
         }
 
         holder.btnRemove.setOnClickListener(new View.OnClickListener() {

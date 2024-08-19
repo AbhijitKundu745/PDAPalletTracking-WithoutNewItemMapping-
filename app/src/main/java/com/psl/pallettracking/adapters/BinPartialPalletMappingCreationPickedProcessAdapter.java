@@ -58,9 +58,9 @@ public class BinPartialPalletMappingCreationPickedProcessAdapter extends Recycle
         itemViewHolder.textPickQty.setText(""+order.getPickedQty());
 
         if ((position) % 2 == 0) {
-            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.red3));
+            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.cyan1));
         } else {
-            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.green1));
+            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.lemonyellow));
         }
     }
 

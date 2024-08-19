@@ -625,7 +625,7 @@ public class AssetPalletMappingDispatchActivity extends AppCompatActivity implem
             JSONObject jsonObject = new JSONObject();
             jsonObject.put(APIConstants.K_DEVICE_ID, SharedPreferencesManager.getDeviceId(context));
             jsonObject.put(APIConstants.K_DC_NO, DC_NO);
-            jsonObject.put("Type", "QR");
+            jsonObject.put("Type", "DISPATCH_QR");
             Log.e("JSONReq", SharedPreferencesManager.getHostUrl(context) + APIConstants.M_GET_SKU_DETAILS);
             Log.e("JSONReq1", jsonObject.toString());
             OkHttpClient okHttpClient = new OkHttpClient().newBuilder()

@@ -10,9 +10,11 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
@@ -22,8 +24,10 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.androidnetworking.AndroidNetworking;
+import com.androidnetworking.common.ANRequest;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
+import com.androidnetworking.interfaces.JSONArrayRequestListener;
 import com.androidnetworking.interfaces.JSONObjectRequestListener;
 import com.psl.pallettracking.adapters.AutoCompleteBinSpinnerAdapter;
 import com.psl.pallettracking.adapters.AutoCompleteSourceBinSpinnerAdapter;
@@ -34,9 +38,12 @@ import com.psl.pallettracking.database.DatabaseHandler;
 import com.psl.pallettracking.databinding.ActivityBinPartialPalletMapProcessBinding;
 import com.psl.pallettracking.helper.APIConstants;
 import com.psl.pallettracking.helper.AssetUtils;
+import com.psl.pallettracking.helper.AuthorizationWMS;
+import com.psl.pallettracking.helper.PickListBin;
 import com.psl.pallettracking.helper.SharedPreferencesManager;
 import com.psl.pallettracking.rfid.RFIDInterface;
 import com.psl.pallettracking.rfid.SeuicGlobalRfidHandler;
+import com.psl.pallettracking.viewHolder.ItemDetailsList;
 import com.seuic.scanner.ScannerFactory;
 import com.seuic.scanner.ScannerKey;
 import com.seuic.uhf.EPC;
@@ -45,17 +52,20 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import gr.escsoft.michaelprimez.searchablespinner.interfaces.OnItemSelectedListener;
 import okhttp3.OkHttpClient;
 
 public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
-
     private ActivityBinPartialPalletMapProcessBinding binding;
     BinPartialPalletMappingCreationProcessAdapter adapter;
     BinPartialPalletMappingCreationPickedProcessAdapter pickedAdapter;
@@ -83,6 +93,8 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
     private SeuicGlobalRfidHandler rfidHandler;
     private DatabaseHandler db;
     private List<BinPartialPalletMappingCreationProcessModel> originalOrderList;
+    String token = "";
+    List<PickListBin > pickedBinDetails = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +112,7 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
         binding.textDCNo.setText(DRNNo);
 
         getWorkOrderItemDetails(workOrderNumber, workOrderType);
+        GetAuthorizationToken();
         binding.edtSearch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -170,6 +183,8 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                             binding.textItemDesc1.setText(clickedItem.getBinDescription());
                             binding.edtPickedQty.setText("" + clickedItem.getPickedQty());
                             selectedSourceBinObject = orderList.get(originalPosition);
+                            //GetBinNameForSKU(clickedItem.getItemName());
+                            GetBinDetails(clickedItem.getItemName());
                         }
 
                     } else
@@ -182,6 +197,8 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                             binding.textItemDesc1.setText(clickedItemFilter.getBinDescription());
                             binding.edtPickedQty.setText("" + clickedItemFilter.getPickedQty());
                             selectedSourceBinObject = filteredList.get(originalPosition1); // Use original position
+                            //GetBinNameForSKU(clickedItemFilter.getItemName());
+                            GetBinDetails(clickedItemFilter.getItemName());
                         } else {
                             // Item not found in original list
                             // Handle this case if needed
@@ -220,7 +237,8 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                     SELECTED_BIN = binding.spBin.getSelectedItem().toString();
                     //TODO call here API to get BIN Details FROM Server
                     BIN_TAG_SCANNED = true;
-                    binding.textScanBin.setText(SELECTED_BIN);
+                    String BinName = Objects.requireNonNull(GetBinNameByLabel(SELECTED_BIN)).getBinName();
+                    binding.textScanBin.setText(BinName);
                     //getBinDetails(SELECTED_BIN);
                 }
             }
@@ -276,7 +294,16 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                 }
             }
         });
-
+binding.btnRefresh.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View view) {
+        SELECTED_BIN = "";
+        binList.clear();
+        binding.textScanBin.setText("");
+        binding.textItemDesc1.setText("");
+        binding.edtPickedQty.setText("");
+    }
+});
 
         binding.btnClear.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -294,74 +321,96 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (selectedSourceBinObject != null) {
-                    //String qty = binding.edtPickedQty.getText().toString();
+                    String FromBin = binding.textScanBin.getText().toString();
+                    if(!TextUtils.isEmpty(FromBin)){
+                        //String qty = binding.edtPickedQty.getText().toString();
 
-                    if (qty.equals("")) {
-                        //please add qty
-                        AssetUtils.showCommonBottomSheetErrorDialog(context, "Please add item quantity");
-                    } else if(!qty.equalsIgnoreCase("0")){
-                        int prevQty = Integer.parseInt(qty);
-                        int TotalQty = 0;
-                        for (BinPartialPalletMappingCreationProcessModel item : pickedOrderList) {
-                            TotalQty += item.getPickedQty();
-                        }
-                        TotalQty += prevQty;
-                        int finalTotalQty = TotalQty;
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                binding.textTotalQty.setText(""+ finalTotalQty);
+                        if (qty.equals("")) {
+                            //please add qty
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, "Please add item quantity");
+                        } else if(!qty.equalsIgnoreCase("0")){
+                            int prevQty = Integer.parseInt(qty);
+                            int TotalQty = 0;
+                            for (BinPartialPalletMappingCreationProcessModel item : pickedOrderList) {
+                                TotalQty += item.getPickedQty();
                             }
-                        });
-                        Log.e("LIST", "UPDATED:");
-                        BinPartialPalletMappingCreationProcessModel obj = new BinPartialPalletMappingCreationProcessModel();
-                        obj.setPickedQty(Integer.parseInt(qty));
-                        obj.setBinDescription(selectedSourceBinObject.getBinDescription());
-                        //obj.setBinNumber(selectedSourceBinObject.getBinNumber());
-                        obj.setBinNumber(binding.textScanBin.getText().toString());
-                        obj.setBatchId(selectedSourceBinObject.getBatchId());
-                        obj.setItemID(selectedSourceBinObject.getItemID());
-                        obj.setItemName(selectedSourceBinObject.getItemName());
+                            TotalQty += prevQty;
+                            int finalTotalQty = TotalQty;
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    binding.textTotalQty.setText(""+ finalTotalQty);
+                                }
+                            });
+                            Log.e("LIST", "UPDATED:");
+                            BinPartialPalletMappingCreationProcessModel obj = new BinPartialPalletMappingCreationProcessModel();
+                            obj.setPickedQty(Integer.parseInt(qty));
+                            obj.setBinDescription(selectedSourceBinObject.getBinDescription());
+                            //obj.setBinNumber(selectedSourceBinObject.getBinNumber());
+                            obj.setBinNumber(FromBin);
+                            obj.setBatchId(selectedSourceBinObject.getBatchId());
+                            obj.setItemID(selectedSourceBinObject.getItemID());
+                            obj.setItemName(selectedSourceBinObject.getItemName());
+                            if(binList.isEmpty()){
+                                obj.setStockBinId(null);
+                            }
+                            else{
+                                int stockBinID = GetIDByLabel(FromBin).getStockBinId();
+                                if(stockBinID == 0){
+                                    obj.setStockBinId(null);
+                                }
+                                else{
+                                    obj.setStockBinId(stockBinID);
+                                }
+                            }
+                            // if (!AssetUtils.isItemAlreadyAdded(selectedSourceBinObject.getBinDescription(), pickedOrderList)) {
+                            BinPartialPalletMappingCreationProcessModel itemObj = AssetUtils.getItemObject(selectedSourceBinObject.getBinDescription(), selectedSourceBinObject.getBinNumber(), selectedSourceBinObject.getItemID(), orderList);
+                            if(itemObj!=null){
+                                if(itemObj.getPickedQty() >= Integer.parseInt(qty)){
+                                    pickedOrderList.add(obj);
+                                    //orderList.remove(itemObj);
+                                    int originalQty = itemObj.getPickedQty();
+                                    int diff = originalQty-Integer.parseInt(qty);
+                                    itemObj.setPickedQty(diff);
+                                    //orderList.add(itemObj);
 
-                        // if (!AssetUtils.isItemAlreadyAdded(selectedSourceBinObject.getBinDescription(), pickedOrderList)) {
-                        BinPartialPalletMappingCreationProcessModel itemObj = AssetUtils.getItemObject(selectedSourceBinObject.getBinDescription(), selectedSourceBinObject.getBinNumber(), orderList);
-                        if(itemObj!=null){
-                            if(itemObj.getPickedQty() >= Integer.parseInt(qty)){
-                                pickedOrderList.add(obj);
-                                orderList.remove(itemObj);
-                                int originalQty = itemObj.getPickedQty();
-                                int diff = originalQty-Integer.parseInt(qty);
-                                itemObj.setPickedQty(diff);
-                                orderList.add(itemObj);
+                                    //adapter.notifyDataSetChanged();
+                                    adapter.notifyItemChanged(orderList.indexOf(itemObj));
+                                    adapter.notifyItemChanged(filteredList.indexOf(itemObj));
+                                    binding.spBin.setSelectedItem(0);
+                                    //binding.spSourceBin.setSelection(0);
+                                    binding.textScanBin.setText("");
 
-                                adapter.notifyDataSetChanged();
-                                binding.spBin.setSelectedItem(0);
-                                //binding.spSourceBin.setSelection(0);
-                                binding.textScanBin.setText("");
+                                }else{
+                                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Item Picking Qty cannot be larger than original qty");
+                                }
+
                             }else{
-                                AssetUtils.showCommonBottomSheetErrorDialog(context, "Item Picking Qty cannot be larger than original qty");
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, "Invalid Item.");
                             }
-
-                        }else{
-                            AssetUtils.showCommonBottomSheetErrorDialog(context, "Invalid Item.");
-                        }
 
 //                        } else {
 //                            AssetUtils.showCommonBottomSheetErrorDialog(context, "Item already added");
 //                        }
-                        pickedAdapter.notifyDataSetChanged();
-                        selectedSourceBinObject = null;
-                        //binding.spSourceBin.setSelection(0);
-                        binding.edtPickedQty.setText("");
-                        binding.textItemDesc1.setText("");
-                    }
-                    else{
-                        AssetUtils.showCommonBottomSheetErrorDialog(context, "Please enter a valid quantity");
-                    }
+                            pickedAdapter.notifyDataSetChanged();
+                            selectedSourceBinObject = null;
+                            //binding.spSourceBin.setSelection(0);
+                            binding.edtPickedQty.setText("");
+                            binding.textItemDesc1.setText("");
+                            binList.clear();
+                        }
+                        else{
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, "Please enter a valid quantity");
+                        }
 
-                } else {
+                    } else {
+                        AssetUtils.showCommonBottomSheetErrorDialog(context, "Please select a bin");
+                    }
+                }
+                else {
                     AssetUtils.showCommonBottomSheetErrorDialog(context, "Please select an item");
                 }
+
             }
         });
         binding.btnPower.setOnClickListener(new View.OnClickListener() {
@@ -609,6 +658,8 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                 JSONObject dataObject = new JSONObject();
                 BinPartialPalletMappingCreationProcessModel obj = pickedOrderList.get(i);
                 dataObject.put("BinName",obj.getBinNumber());
+                String BinName = obj.getBinNumber().toString();
+                dataObject.put("stockBinId", obj.getStockBinId());
                 if(obj.getBatchId().equalsIgnoreCase(null)){
                     dataObject.put("BatchID",null);
                 } else{
@@ -890,7 +941,7 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
                     originalOrderList.add(binPartialPalletMappingCreationProcessModel);
                     binObjectListForSourceSpinner.add(binPartialPalletMappingCreationProcessModel);
                 }
-                binList = db.getBinName();
+                //binList = db.getBinName();
                 if (binObjectListForSourceSpinner != null) {
                     if (binObjectListForSourceSpinner.size() > 0) {
                         BinPartialPalletMappingCreationProcessModel binPartialPalletMappingCreationProcessModel = new BinPartialPalletMappingCreationProcessModel();
@@ -1069,5 +1120,266 @@ public class BinPartialPalletMapProcessActivity extends AppCompatActivity {
     public void onBackPressed() {
         showCustomConfirmationDialog("Are you sure you want to go back","BACK");
         //super.onBackPressed();
+    }
+    private void GetAuthorizationToken()
+    {
+        AuthorizationWMS authorization = new AuthorizationWMS();
+        String  authorizationUrl ="http://192.168.100.18:8082/wms/api/auth/authorize";
+        String username ="ashutosh.sahib@psl.co.in";
+        String password ="pass123";
+        try {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("username", username);
+            jsonObject.put("password", password);
+            OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
+                    .connectTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                    .readTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                    .writeTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                    .build();
+            Log.e("AuthReq", jsonObject.toString());
+            AndroidNetworking.post(authorizationUrl).addJSONObjectBody(jsonObject)
+                    .setTag("test")
+                    .setPriority(Priority.LOW)
+                    .setOkHttpClient(okHttpClient) // passing a custom okHttpClient
+                    .build()
+                    .getAsJSONObject(new JSONObjectRequestListener() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            Log.e("Response", response.toString());
+                            if (response != null) {
+                                try {
+                                    if (response.has("access_token")) {
+                                        String accessToken = response.getString("access_token");
+                                          authorization.setAccess_token(accessToken);
+                                          token = accessToken;
+
+
+                                    }
+                                    if (response.has("name")) {
+                                        if(!response.getString("name").equals(null))
+                                        {
+                                            String  name = response.getString("name");
+                                            authorization.setName(name);
+                                        }
+                                    }
+                                    if (response.has("username")) {
+                                        if(!response.getString("username").equals(null))
+                                        {
+                                            String  username = response.getString("username");
+                                            authorization.setUsername(username);
+                                        }
+                                    }
+                                    if (response.has("phone")) {
+                                        if(!response.getString("phone").equals(null))
+                                        {
+                                            String  phone = response.getString("phone");
+                                            authorization.setPhone(phone);
+                                        }
+                                    }
+                                    if (response.has("email")) {
+                                        if(!response.getString("email").equals(null))
+                                        {
+                                            String  email = response.getString("email");
+                                            authorization.setEmail(email);
+                                        }
+                                    }
+                                    if (response.has("id")) {
+
+                                            int  id = response.getInt("id");
+                                            authorization.setId(id);
+                                    }
+                                } catch (JSONException e) {
+                                    AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.communication_error));
+                                }
+                            } else {
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.communication_error));
+                            }
+                        }
+
+                        @Override
+                        public void onError(ANError anError) {
+                            if (anError.getErrorDetail().equalsIgnoreCase("responseFromServerError")) {
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.communication_error));
+                            } else if (anError.getErrorDetail().equalsIgnoreCase("connectionError")) {
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
+                            } else {
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
+                            }
+
+                        }
+                    });
+        } catch (JSONException e) {
+            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
+            Log.d("Err", e.getMessage());
+        }
+    }
+    private void GetBinNameForSKU(String skuCode)
+    {
+
+        showProgress(context, "Please wait while fetching respective bins");
+        if(binList != null){
+            binList.clear();
+        }
+        if(pickedBinDetails != null){
+            pickedBinDetails.clear();
+        }
+
+        OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
+                .connectTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                .readTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                .writeTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                .build();
+        //String url = "http://192.168.100.18:8082/wms/api/v1/stocks/bins?page=0&size=1000&skuCode="+skuCode;
+        String url = "http://192.168.100.18:8082/wms/api/v1/stocks/bins/skuCode/"+skuCode;
+        Log.e("BinURL", url);
+        AndroidNetworking.get(url)
+                .addHeaders("Authorization", "Bearer "+token)
+                .addHeaders("X-TenantId", "1")
+                .addHeaders("Accept", "application/json")
+                .setTag("test")
+                .setPriority(Priority.LOW)
+                .setOkHttpClient(okHttpClient) // passing a custom okHttpClient
+                .build()
+                .getAsJSONArray(new JSONArrayRequestListener() {
+                    @Override
+                    public void onResponse(JSONArray result) {
+
+                        if (result != null) {
+                            hideProgressDialog();
+                            try {
+                                if(result.length()>0){
+                                    for(int i = 0; i< result.length(); i++){
+                                        JSONObject data = result.getJSONObject(i);
+                                        PickListBin bins = new PickListBin();
+                                        if(data.has("id")){
+                                            int id = data.getInt("id");
+                                            bins.setStockBinId(id);
+                                        }
+                                        else{
+                                            bins.setStockBinId(0);
+                                        }
+                                        if(data.has("label")){
+                                            String label = data.getString("label");
+                                            if(!binList.contains(label)){
+                                                binList.add(label);
+                                            }
+                                            bins.setLabel(label);
+                                        }
+                                        if(data.has("binName")){
+                                            String bin = data.getString("binName");
+                                            bins.setBinName(bin);
+                                        }
+                                        if(data.has("batchMonth")){
+                                            String batchMonth = data.getString("batchMonth");
+                                            bins.setBatchMonth(batchMonth);
+                                        }
+                                        if(data.has("batchDateTime")){
+                                            String batchDateTime = data.getString("batchDateTime");
+                                            bins.setBatchDateTime(batchDateTime);
+                                        }
+                                        if(data.has("bayName")){
+                                            String bayName = data.getString("bayName");
+                                           bins.setBayName(bayName);
+                                        }
+                                        if(data.has("shelf")){
+                                            String shelf = data.getString("shelf");
+                                            bins.setShelf(shelf);
+                                        }
+                                        if(data.has("binNumber")){
+                                            String binNumber = data.getString("binNumber");
+                                            bins.setBinNumber(binNumber);
+                                        }
+                                        if(data.has("qty")){
+                                            double qty = data.getDouble("qty");
+                                            bins.setQty(qty);
+                                        }
+                                        pickedBinDetails.add(bins);
+                                    }
+                                }
+
+                            } catch (JSONException e) {
+                                hideProgressDialog();
+                                throw new RuntimeException(e);
+                            }
+
+                        } else {
+                            hideProgressDialog();
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.communication_error));
+                        }
+                    }
+
+                    @Override
+                    public void onError(ANError anError) {
+                        hideProgressDialog();
+                        Log.e("ERROR", anError.getErrorDetail());
+                        if (anError.getErrorDetail().equalsIgnoreCase("responseFromServerError")) {
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.communication_error));
+                        } else if (anError.getErrorDetail().equalsIgnoreCase("connectionError")) {
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
+                        } else {
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
+                        }
+                    }
+                });
+
+    }
+    private PickListBin GetBinNameByLabel(String label)
+    {
+        for (PickListBin item : pickedBinDetails) {
+            if (item.getLabel().equals(label)) {
+                return item;
+            }
+        }
+        return null;
+    }
+    private PickListBin GetIDByLabel(String BinName)
+    {
+        for (PickListBin item : pickedBinDetails) {
+            if (item.getBinName().equals(BinName)) {
+                return item;
+            }
+        }
+        return null;
+    }
+    private void GetBinDetails(String skucode) {
+
+        if (!skucode.equals(null)) {
+            new CollectInventoryData().execute(skucode);
+        }
+    }
+
+    public class CollectInventoryData extends AsyncTask<String, String, String> {
+        protected void onPreExecute() {
+            showProgress(context, "Please wait while fetching Bin details");
+            super.onPreExecute();
+        }
+
+        protected String doInBackground(String... params) {
+            String SKU = params[0];
+            return SKU;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            if (result != null) {
+                    try {
+                        hideProgressDialog();
+                        GetBinNameForSKU(result);
+
+                    } catch (OutOfMemoryError e) {
+                        hideProgressDialog();
+                        AssetUtils.showCommonBottomSheetErrorDialog(context, "Huge Data cannot be uploaded");
+                    }
+
+
+            } else {
+                hideProgressDialog();
+                AssetUtils.showCommonBottomSheetErrorDialog(context, "Something went wrong");
+            }
+
+        }
+
     }
 }
