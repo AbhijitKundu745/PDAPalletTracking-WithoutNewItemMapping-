@@ -18,7 +18,7 @@ import java.util.Locale;
 
 public class BinPartialPalletMappingCreationProcessAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private Context context;
-    private List<BinPartialPalletMappingCreationProcessModel> orderList;
+    private static List<BinPartialPalletMappingCreationProcessModel> orderList;
     private List<BinPartialPalletMappingCreationProcessModel> filteredList;
     private static OnItemClickListener listener;
     public interface OnItemClickListener {
@@ -55,6 +55,10 @@ public class BinPartialPalletMappingCreationProcessAdapter extends RecyclerView.
                         int position = getAdapterPosition();
                         if (position != RecyclerView.NO_POSITION) {
                             listener.onItemClick(itemView, position);
+//                            BinPartialPalletMappingCreationProcessModel order = orderList.get(position);
+//                            if (order.getClickedEnable()) {
+//                                listener.onItemClick(itemView, position);
+//                            }
                         }
                     }
                 }
@@ -81,12 +85,15 @@ public class BinPartialPalletMappingCreationProcessAdapter extends RecyclerView.
         itemViewHolder.textBinName.setText(order.getBinNumber());
         itemViewHolder.textBinName.setSelected(true);
         itemViewHolder.textPickQty.setText(""+order.getPickedQty());
-
-        if ((position) % 2 == 0) {
-            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.cyan1));
-        } else {
-            itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.lemonyellow));
-        }
+//if(order.getClickedEnable()){
+    if ((position) % 2 == 0) {
+        itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.cyan1));
+    } else {
+        itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.lemonyellow));
+    }
+//} else{
+//    itemViewHolder.itemView.setBackgroundColor(context.getResources().getColor(R.color.text_gray));
+//}
     }
     public void filter(String searchText) {
         filteredList.clear();

@@ -29,6 +29,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,7 +70,7 @@ public class AssetUtils {
         }
         return isPresent;
     }
-    public static List<BinPartialPalletMappingCreationProcessModel> getUpdatedOrderList(String itemDesc, List<BinPartialPalletMappingCreationProcessModel> workOrderListItemList,int removedqty) {
+    public static List<BinPartialPalletMappingCreationProcessModel> getUpdatedOrderList(String itemDesc, List<BinPartialPalletMappingCreationProcessModel> workOrderListItemList,double removedqty) {
         ;if (workOrderListItemList != null) {
             for (BinPartialPalletMappingCreationProcessModel item : workOrderListItemList) {
                 int count = 0;
@@ -78,8 +80,8 @@ public class AssetUtils {
                     // If found, retrieve the loadingAreaTagId and break the loop
                     BinPartialPalletMappingCreationProcessModel obj = item;
                     workOrderListItemList.remove(count);
-                    int originalQty = item.getPickedQty();
-                    int diff = originalQty-removedqty;
+                    double originalQty = item.getPickedQty();
+                    double diff = originalQty-removedqty;
                     obj.setPickedQty(diff);
                     obj = item;
                     workOrderListItemList.add(obj);
@@ -187,6 +189,14 @@ public class AssetUtils {
         dashboardModel3.setMenuSequence("5");
         dashboardModel3.setIsMenuActive("true");
 
+        DashboardModel dashboardModel4 = new DashboardModel();
+        dashboardModel3.setMenuName(AppConstants.DASHBOARD_MENU_STOCK_RECORD);
+        dashboardModel3.setDrawableImage(R.mipmap.ic_launcher);
+        dashboardModel3.setMenuId(AppConstants.MENU_ID_STOCK_RECORD);
+        dashboardModel3.setMenuimageName("");
+        dashboardModel3.setMenuSequence("7");
+        dashboardModel3.setIsMenuActive("true");
+
       /*  DashboardModel dashboardModel3 = new DashboardModel();
         dashboardModel3.setMenuName(AppConstants.DASHBOARD_MENU_CHECKIN);
         dashboardModel3.setDrawableImage(R.drawable.checkin);
@@ -240,6 +250,7 @@ public class AssetUtils {
         dashboardlist.add(dashboardModel1);
         dashboardlist.add(dashboardModel2);
         dashboardlist.add(dashboardModel3);
+        dashboardlist.add(dashboardModel4);
         //dashboardlist.add(dashboardModel2);
       /*  dashboardlist.add(dashboardModel3);
         dashboardlist.add(dashboardModel4);
@@ -1009,6 +1020,44 @@ public class AssetUtils {
 
         }
     }
+    static Timer timer =null;
+    public interface TimerCallback {
+        void onTimerUpdate(String timerString);
+    }
 
+    public static void getTimer(TimerCallback callback) {
+        // Initialize the timer variable to zero
+        final long[] startTime = {0}; // Use an array to hold the value
 
+        if (timer != null) {
+            timer.cancel();
+        }
+        timer = new Timer();
+        // Set the timer interval to 1 second
+        int interval = 1000; // 1 second
+
+        // Create a TimerTask to update the timer
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                // Update the timer variable
+                startTime[0] += interval;
+
+                // Format the time
+                SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+                timeFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+                String timerString = timeFormat.format(new Date(startTime[0]));
+
+                // Notify the callback
+                callback.onTimerUpdate(timerString);
+            }
+        };
+        // Schedule the TimerTask to run every 1 second
+        timer.scheduleAtFixedRate(timerTask, 0, interval);
+    }
+public static void stopTimer(){
+    if (timer != null) {
+        timer.cancel();
+    }
+}
 }

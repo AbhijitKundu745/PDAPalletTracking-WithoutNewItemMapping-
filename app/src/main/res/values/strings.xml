@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">1.0Activities of Pallet</string>
+    <string name="app_name">Activities of Assets</string>
     <string name="uhf_initialization">Please wait...\nUHF Initialization is in progress</string>
     <string name="asset_type_master_sync_error">Please Sync Asset Type Master</string>
     <string name="location_master_sync_error">Vendor Master not found</string>

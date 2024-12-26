@@ -24,7 +24,6 @@ import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.JSONObjectRequestListener;
 import com.psl.pallettracking.adapters.CustomRecyclerViewDashboardAdapter;
-import com.psl.pallettracking.database.AssetMaster;
 import com.psl.pallettracking.database.DatabaseHandler;
 import com.psl.pallettracking.database.ProductMaster;
 import com.psl.pallettracking.database.SKUMaster;
@@ -34,7 +33,6 @@ import com.psl.pallettracking.helper.AppConstants;
 import com.psl.pallettracking.helper.AssetUtils;
 import com.psl.pallettracking.helper.BatteryStatusHelper;
 import com.psl.pallettracking.helper.ConnectionDetector;
-import com.psl.pallettracking.helper.NetworkUtils;
 import com.psl.pallettracking.helper.SharedPreferencesManager;
 
 import org.json.JSONArray;
@@ -44,7 +42,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.OkHttpClient;
 
 public class DashboardActivity extends AppCompatActivity {
@@ -53,7 +50,6 @@ public class DashboardActivity extends AppCompatActivity {
     private Context context = this;
     private DatabaseHandler db;
     private ConnectionDetector cd;
-    String NetworkStatus = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,23 +60,13 @@ public class DashboardActivity extends AppCompatActivity {
 
         db = new DatabaseHandler(context);
         cd = new ConnectionDetector(context);
-        BatteryStatusHelper batteryStatusHelper = getBatteryStatus();
-        Log.e("BatteryStat","Battery Level: " + batteryStatusHelper.level + "%, Charging: " + batteryStatusHelper.charging);
 
-        NetworkUtils.checkPingStrength("192.168.1.7", new NetworkUtils.PingStrengthCallback() {
-            @Override
-            public void onPingStrengthResult(String result) {
-                Log.d("PingStrength", result);
-                // Update your UI here
-            }
-        });
         // set a GridLayoutManager with default vertical orientation and 2 number of columns
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getApplicationContext(), 2); // you can change grid columns to 3 or more
         binding.recycleview.setLayoutManager(gridLayoutManager); // set LayoutManager to RecyclerView
         //  call the constructor of CustomAdapter to send the reference and data to Adapter
         CustomRecyclerViewDashboardAdapter customAdapter = new CustomRecyclerViewDashboardAdapter(DashboardActivity.this, db.getDashboardMenuList());
         binding.recycleview.setAdapter(customAdapter); // set the Adapter to RecyclerView
-
     }
 
     public void gridClicked(int position, String name,String menu_id,String isMenuActive) {
@@ -112,7 +98,7 @@ public class DashboardActivity extends AppCompatActivity {
                     break;
                 case AppConstants.MENU_ID_INVENTORY:
                     if (db.getAssetMasterCount() > 0) {
-                        inventoryClicked();
+                        //inventoryClicked();
                     }else{
                         AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.asset_type_master_sync_error));
                     }
@@ -121,7 +107,7 @@ public class DashboardActivity extends AppCompatActivity {
                 case AppConstants.MENU_ID_SEARCH:
 
                     if (db.getAssetMasterCount() > 0) {
-                        searchClicked();
+                        //searchClicked();
                     }else{
                         AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.asset_type_master_sync_error));
                     }
@@ -133,6 +119,9 @@ public class DashboardActivity extends AppCompatActivity {
                 case AppConstants.MENU_ID_MAP_PARTIAL_PALLET:
                     mapPartialPalletCLicked();
                     break;
+//                case AppConstants.MENU_ID_STOCK_RECORD:
+//                    mapStockRecordClick();
+//                    break;
                 default:
                     AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.unIntegrated_dashboard_menu));
                     break;
@@ -221,29 +210,29 @@ public class DashboardActivity extends AppCompatActivity {
 
     }
 
-    public void inventoryClicked() {
-        if (db.getAssetTypeMasterCount() > 0) {
-            showProgress(context, getResources().getString(R.string.uhf_initialization));
-            Intent inventoryIntent = new Intent(DashboardActivity.this, AssetInventoryActivity.class);
-            inventoryIntent.putExtra("type", 0);
-            //0 - inventory
-            //1 - check in
-            //2 - check out
-            startActivity(inventoryIntent);
-        } else {
-            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.asset_type_master_sync_error));
-        }
-    }
+//    public void inventoryClicked() {
+//        if (db.getAssetTypeMasterCount() > 0) {
+//            showProgress(context, getResources().getString(R.string.uhf_initialization));
+//            Intent inventoryIntent = new Intent(DashboardActivity.this, AssetInventoryActivity.class);
+//            inventoryIntent.putExtra("type", 0);
+//            //0 - inventory
+//            //1 - check in
+//            //2 - check out
+//            startActivity(inventoryIntent);
+//        } else {
+//            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.asset_type_master_sync_error));
+//        }
+//    }
 
-    public void searchClicked() {
-        if (db.getAssetTypeMasterCount() > 0) {
-            showProgress(context, getResources().getString(R.string.uhf_initialization));
-            Intent searchIntent = new Intent(DashboardActivity.this, AssetSearchActivity.class);
-            startActivity(searchIntent);
-        } else {
-            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.asset_type_master_sync_error));
-        }
-    }
+//    public void searchClicked() {
+//        if (db.getAssetTypeMasterCount() > 0) {
+//            showProgress(context, getResources().getString(R.string.uhf_initialization));
+//            Intent searchIntent = new Intent(DashboardActivity.this, AssetSearchActivity.class);
+//            startActivity(searchIntent);
+//        } else {
+//            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.asset_type_master_sync_error));
+//        }
+//    }
 
     public void syncClicked() {
         if (cd.isConnectingToInternet()) {
@@ -260,6 +249,19 @@ public class DashboardActivity extends AppCompatActivity {
         } else {
             AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
         }
+    }
+    public void mapStockRecordClick() {
+        String type = "StockRecord";
+        showProgress(context,"Processing");
+        if (db.getProductMasterCount() > 0) {
+            Intent i = new Intent(DashboardActivity.this,StockTakingActivity.class);
+            startActivity(i);
+        } else {
+            showCustomConfirmationDialog("No Asset Master Sync, Are you sure you want to proceed without Asset Master Sync ?", type);
+
+            // AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.asset_type_master_sync_error));
+        }
+
     }
 
     @Override

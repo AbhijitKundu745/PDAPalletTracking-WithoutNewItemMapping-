@@ -34,6 +34,7 @@ public class AppConstants {
     public static final String MENU_ID_TRACKPOINT = "TRACKPOINT_ID";
     public static final String MENU_ID_SECURITYOUT = "SECURITYOUT_ID";
     public static final String MENU_ID_MAP_PARTIAL_PALLET = "MAP_PARTIAL_PALLET_ITEM";
+    public static final String MENU_ID_STOCK_RECORD = "STOCK_RECORD";
 
     public static List<AssetMaster> getAssetMasterList(){
         List<AssetMaster> list = new ArrayList<>();
@@ -245,6 +246,7 @@ public class AppConstants {
     public static final String DASHBOARD_MENU_PALLET_MOVEMENT = "Pallet Movement";
     public static final String DASHBOARD_MENU_PARTIAL_LOADING = "Dispatch Pallet Creation";
     public static final String DASHBOARD_MENU_ITEM_MOVEMENT = "Item Movement";
+    public static final String DASHBOARD_MENU_STOCK_RECORD = "Stock Record";
     public static final String DASHBOARD_MENU_INVENTORY = "Inventory";
     public static final String DASHBOARD_MENU_SEARCH = "Search";
     public static final String DASHBOARD_MENU_CHECKIN = "Check In";

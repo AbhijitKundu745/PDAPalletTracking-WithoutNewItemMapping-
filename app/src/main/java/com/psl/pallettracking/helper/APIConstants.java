@@ -38,6 +38,7 @@ public class APIConstants {
    // public static final String M_UPLOAD_ASSET_PALLET_MAPPING = "/PDA/RegisterAssetPallet";
    // public static final String M_UPLOAD_CONTAINER_PALLET_MAPPING = "/PDA/RegisterContainerPallet";
     public static final String M_GET_PRODUCT_MASTER = "/PDA/GetAllAssetsMobile?tenantID=";
+    public static final String M_GET_WAREHOUSE_MASTER = "/PDA/GetWarehouseDetails";
 
     public static final int API_TIMEOUT = 60;
 
@@ -86,6 +87,7 @@ public class APIConstants {
     public static final String K_ASSET_TYPE_NAME = "AssetName";
     public static final String K_ITEM_DESCRIPTION = "ItemDescription";
     public static final String K_TOUCH_POINT_ID = "TouchpointID";
+    public static final String K_ITEM_STATUS = "ItemStatus";
 
     public static final String K_ASSET_ID = "AssetID";
 
@@ -176,6 +178,8 @@ public class APIConstants {
  public static final String CURRENT_WORK_ORDER_STATUS = "WorkorderStatus";
  public static final String K_DC_TAG_ID = "DCTagID";
  public static final String K_DC_NO = "DCNo";
+ public static final String K_WAREHOUSE_NAME = "WarehouseName";
+ public static final String K_WAREHOUSE_ID = "WarehouseID";
 
  public static String getSystemDateTimeForBatchId() {
   try {

@@ -89,6 +89,27 @@ public class LoadingItemMappingActivity extends AppCompatActivity {
                 }
             }
         });
+        binding.btnTruckRegisterWithQrManual.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(IS_DC_TAG_SCANNED){
+                    if(!TextUtils.isEmpty(binding.textDCNumber.getText())){
+                        showProgress(context, "Processing");
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                SyncSOLineItems(DC_NO, "WITH_QR_MANUAL");
+                            }
+                        }, 1000);
+                    }
+                    else{
+                        AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan valid DC tag to proceed");
+                    }
+                } else{
+                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan DC tag");
+                }
+            }
+        });
         binding.btnTruckRegisterWithoutQr.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -260,6 +281,7 @@ public class LoadingItemMappingActivity extends AppCompatActivity {
             try {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put(APIConstants.K_DC_TAG_ID, CURRENT_EPC);
+                jsonObject.put(APIConstants.K_WAREHOUSE_ID, SharedPreferencesManager.getWarehouseId(context));
                 fetchDCDetails(jsonObject, APIConstants.M_DC_DETAILS, "Please wait...\n" + "Getting DC Details");
             } catch (Exception ex) {
 
@@ -471,6 +493,7 @@ public class LoadingItemMappingActivity extends AppCompatActivity {
             try {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put(APIConstants.K_DC_TAG_ID, dcNo);
+                jsonObject.put(APIConstants.K_WAREHOUSE_ID, SharedPreferencesManager.getWarehouseId(context));
 
                 OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
                             .connectTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
@@ -485,11 +508,17 @@ public class LoadingItemMappingActivity extends AppCompatActivity {
                             .build().getAsJSONObject(new JSONObjectRequestListener() {
                                 @Override
                                 public void onResponse(JSONObject response) {
-
+Log.e("ResPonse1", response.toString());
                                     if (response != null) {
                                         if (response.has(APIConstants.K_STATUS)) {
                                                 if(action.equals("WITH_QR")){
                                                     Intent AssetPalletMappingIntent = new Intent(LoadingItemMappingActivity.this, AssetPalletMappingDispatchActivity.class);
+                                                    AssetPalletMappingIntent.putExtra("DRN", DC_NO);
+                                                    AssetPalletMappingIntent.putExtra("DC_TAG_ID", DC_TAG_ID);
+                                                    startActivity(AssetPalletMappingIntent);
+                                                }
+                                                else if(action.equals("WITH_QR_MANUAL")){
+                                                    Intent AssetPalletMappingIntent = new Intent(LoadingItemMappingActivity.this, AssetPalletQRManualDispatchActivity.class);
                                                     AssetPalletMappingIntent.putExtra("DRN", DC_NO);
                                                     AssetPalletMappingIntent.putExtra("DC_TAG_ID", DC_TAG_ID);
                                                     startActivity(AssetPalletMappingIntent);

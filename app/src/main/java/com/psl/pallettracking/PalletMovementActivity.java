@@ -746,15 +746,15 @@ Log.e("DBTAG", tagWithDestination.getDestinationTag());
                                                     }
 
                                                 }
-//                                                else if (workorderType.equalsIgnoreCase("L0") || workorderType.equalsIgnoreCase("L1")) {
-//                                                    if(!palletTagId.equalsIgnoreCase(LAST_SUCCEED_PALLET)||!db.isEpcPresentInOffline(palletTagId)) {
-//                                                       disOrderDetailsList.add(workOrderListItem);
-//                                                        LAST_SUCCEED_PALLET = "";
-//                                                    }
-//                                                }
+                                                else if (workorderType.equalsIgnoreCase("L0") || workorderType.equalsIgnoreCase("L1")) {
+                                                    if(!palletTagId.equalsIgnoreCase(LAST_SUCCEED_PALLET)||!db.isEpcPresentInOffline(palletTagId)) {
+                                                       disOrderDetailsList.add(workOrderListItem);
+                                                        LAST_SUCCEED_PALLET = "";
+                                                    }
+                                                }
                                                 else if (workorderType.equalsIgnoreCase("I0")) {
                                                     if(!palletTagId.equalsIgnoreCase(LAST_SUCCEED_PALLET)||!db.isEpcPresentInOffline(palletTagId)) {
-                                                        disOrderDetailsList.add(workOrderListItem);
+                                                        recOrderDetailsList.add(workOrderListItem);
                                                         LAST_SUCCEED_PALLET = "";
                                                     }
                                                 }

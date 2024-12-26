@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="#b1cee9"
+        android:background="@drawable/gradient_color"
         tools:context=".DashboardActivity">
         <ImageView
             android:layout_width="300dp"
@@ -93,7 +93,7 @@
             android:gravity="center"
             android:paddingBottom="5dp"
             android:text="@string/footer"
-            android:textColor="#27557f"
+            android:textColor="@color/white"
             android:textStyle="bold"
             android:layout_margin="5dp"
             android:textSize="12sp"/>

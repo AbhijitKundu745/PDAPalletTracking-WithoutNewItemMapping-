@@ -72,19 +72,25 @@ public class TruckMappingActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(IS_TRUCK_TAG_SCANNED){
-                    showProgress(context, "Processing");
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
 
-                            Intent AssetPalletMappingIntent = new Intent(TruckMappingActivity.this, AssetPalletMappingActivity.class);
-                            AssetPalletMappingIntent.putExtra("DRN", DC_NO);
-                            //AssetPalletMappingIntent.putExtra("TruckNumber", SharedPreferencesManager.getTruckNumber(context));
-                            //AssetPalletMappingIntent.putExtra("LocationName", SharedPreferencesManager.getLocationName(context));
+                    try {
+                        showProgress(context, "Processing");
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
 
-                            startActivity(AssetPalletMappingIntent);
-                        }
-                    }, 1000);
+                                Intent AssetPalletMappingIntent = new Intent(TruckMappingActivity.this, AssetPalletMappingActivity.class);
+                                AssetPalletMappingIntent.putExtra("DRN", DC_NO);
+                                //AssetPalletMappingIntent.putExtra("TruckNumber", SharedPreferencesManager.getTruckNumber(context));
+                                //AssetPalletMappingIntent.putExtra("LocationName", SharedPreferencesManager.getLocationName(context));
+
+                                startActivity(AssetPalletMappingIntent);
+                            }
+                        }, 1000);
+                    } finally {
+//                        span.end();
+                    }
+
                 } else{
                     AssetUtils.showCommonBottomSheetErrorDialog(context, "Please scan truck tag");
                 }
@@ -256,11 +262,21 @@ public class TruckMappingActivity extends AppCompatActivity {
                             companycode = AssetUtils.hexToNumber(companycode);
                             String assettpid = CURRENT_EPC.substring(2, 4);
                             String serialnumber = CURRENT_EPC.substring(4, 12);
-                                TRUCK_TAG_ID = CURRENT_EPC;
-                                binding.edtTruckID.setText(TRUCK_TAG_ID);
-                                //binding.edtTruckID.setText(SharedPreferencesManager.getTruckNumber(context));
-                        IS_TRUCK_TAG_SCANNED = true;
-                                getTruckDetails();
+                            if(companycode.equalsIgnoreCase("20")){
+                                if(assettpid.equalsIgnoreCase("06")){
+                                    TRUCK_TAG_ID = CURRENT_EPC;
+                                    binding.edtTruckID.setText(TRUCK_TAG_ID);
+                                    //binding.edtTruckID.setText(SharedPreferencesManager.getTruckNumber(context));
+                                    IS_TRUCK_TAG_SCANNED = true;
+                                    getTruckDetails();
+                                } else{
+                                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Not a truck tag");
+                                }
+
+                            } else{
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, "Invalid RFID Tag");
+                            }
+
                     }
                 }
             } catch (Exception e) {
@@ -278,6 +294,7 @@ public class TruckMappingActivity extends AppCompatActivity {
             try {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put(APIConstants.K_TRUCK_TAG_ID, CURRENT_EPC);
+                jsonObject.put(APIConstants.K_WAREHOUSE_ID, SharedPreferencesManager.getWarehouseId(context));
                 fetchTruckDetails(jsonObject, APIConstants.M_TRUCK_DETAILS, "Please wait...\n" + "Getting Truck Details");
             } catch (Exception ex) {
 
@@ -305,23 +322,16 @@ public class TruckMappingActivity extends AppCompatActivity {
                         if (response != null) {
                             try {
                                 hideProgressDialog();
-                                Log.e("TRUCKDETAILS", response.toString());
                                 if (response.has(APIConstants.K_STATUS)) {
                                     if (response.getBoolean(APIConstants.K_STATUS)) {
                                         Log.e("Status", response.getString(APIConstants.K_STATUS));
                                         if (response.has(APIConstants.K_DATA)) {
-                                            Log.e("DATAARRAY1", response.getString(APIConstants.K_DATA));
+                                            if (!response.isNull(APIConstants.K_DATA)) {
                                             JSONObject dataObject;
                                             dataObject = response.getJSONObject(APIConstants.K_DATA);
-                                            Log.e("DATAARRAY", dataObject.toString());
-                                            if (dataObject != null) {
-                                                if (dataObject.length() > 0) {
-                                                    parseTruckDetailsFetchAndDoAction(dataObject);
-                                                } else {
-                                                    AssetUtils.showCommonBottomSheetErrorDialog(context, "No Asset Master Found");
-                                                }
+                                            parseTruckDetailsFetchAndDoAction(dataObject);
                                             } else {
-                                                AssetUtils.showCommonBottomSheetErrorDialog(context, "No Asset Master Found");
+                                                AssetUtils.showCommonBottomSheetErrorDialog(context, "Not a valid truck tag for this warehouse");
                                             }
                                         }
 

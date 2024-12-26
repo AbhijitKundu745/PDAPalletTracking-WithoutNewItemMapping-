@@ -29,6 +29,8 @@ public class SharedPreferencesManager {
     private static final String PROCESS_TYPE = "PROCESS_TYPE";
     private static final String DRN = "DRN";
     private static final String POLLING_TIMER = "POLLING_TIMER";
+    private static final String WAREHOUSE_ID = "WAREHOUSE_ID";
+    private static final String DEFAULT_HOST_URL = "DEFAULT_HOST_URL";
 
     private SharedPreferencesManager() {}
 
@@ -213,6 +215,24 @@ public class SharedPreferencesManager {
         final SharedPreferences.Editor editor = getSharedPreferences(context).edit();
         editor.putString(PROCESS_TYPE, newValue);
         editor.commit();
+    }
+    public static Integer getWarehouseId(Context context) {
+        return getSharedPreferences(context).getInt(WAREHOUSE_ID, 0);
+    }
+
+    public static void setWarehouseId(Context context, Integer newValue) {
+        final SharedPreferences.Editor editor = getSharedPreferences(context).edit();
+        editor.putInt(WAREHOUSE_ID, newValue);
+        editor.commit();
+    }
+    public static void setDefaultHostUrl(Context context, String newValue) {
+        final SharedPreferences.Editor editor = getSharedPreferences(context).edit();
+        editor.putString(DEFAULT_HOST_URL, newValue);
+        editor.commit();
+    }
+
+    public static String getDefaultHostUrl(Context context) {
+        return getSharedPreferences(context).getString(DEFAULT_HOST_URL, "http://192.168.1.12/GRBAPI");
     }
 
 }

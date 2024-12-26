@@ -24,9 +24,9 @@
         android:layout_height="30dp"
         android:orientation="horizontal">
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="20dp"
-            android:layout_weight="1"
+            android:layout_weight="0.5"
             android:gravity="center"
             android:singleLine="true"
             android:ellipsize="marquee"
@@ -35,14 +35,35 @@
             android:textStyle="bold" />
         <TextView
             android:id="@+id/textDCNo"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="20dp"
-            android:layout_weight="1"
+            android:layout_weight="1.5"
             android:gravity="center"
             android:singleLine="true"
             android:ellipsize="marquee"
             android:textColor="@color/orange1"
             android:textStyle="bold" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="20dp"
+            android:layout_weight="0.5"
+            android:gravity="center"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:textColor="#0159A9"
+            android:textStyle="bold"
+            android:text="Timer:"/>
+        <TextView
+            android:id="@+id/timer"
+            android:layout_width="0dp"
+            android:layout_height="20dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:textColor="@color/red"
+            android:textStyle="bold"
+            android:text="00:00:00"/>
     </androidx.appcompat.widget.LinearLayoutCompat>
 
         <androidx.appcompat.widget.LinearLayoutCompat
@@ -224,25 +245,16 @@
                 android:textStyle="bold"
                 android:layout_marginRight="5dp"/>
 
-            <gr.escsoft.michaelprimez.searchablespinner.SearchableSpinner
-                android:id="@+id/spBin"
+            <TextView
                 android:layout_width="0dp"
-                android:layout_weight="1.5"
+                android:layout_weight="1"
                 android:layout_height="match_parent"
+                android:id="@+id/spBin"
+                android:hint="Select Bin"
+                android:padding="12dp"
                 android:gravity="center_vertical"
-                app:StartSearchTintColor="@color/black"
-                android:background="@drawable/spinner_background"
-                app:DoneSearchTintColor="@android:color/black"
-                app:RevealViewBackgroundColor="@android:color/transparent"
-                app:SearchViewBackgroundColor="@android:color/transparent"
-                app:ShowBorders="true"
-                app:SearchViewTextColor="@color/black"
-                app:NoItemsFoundText=""
-                app:RevealEmptyText="Select Bin"
-                app:DividerHeight="1dp"
-                android:soundEffectsEnabled="true"
-                app:SearchHintText="Tap to search"
-                app:SpinnerExpandHeight="200dp"
+                android:drawableEnd="@drawable/drop_down"
+                android:background="@android:drawable/editbox_background"
                 />
 
         </androidx.appcompat.widget.LinearLayoutCompat>
@@ -276,8 +288,8 @@
                 android:gravity="center"
                 android:layout_weight="0.7"
                 android:inputType="number"
-                android:digits="0123456789"
-                android:maxLength="4"
+                android:digits="0123456789.1234"
+                android:maxLength="8"
                 android:singleLine="true"
                 android:background="@drawable/edit_text_background"
                 android:hint="Add Qty" />
@@ -413,7 +425,7 @@
                 android:layout_gravity="center"
                 android:layout_marginStart="5dp"
                 android:layout_marginEnd="5dp"
-                android:background="@drawable/round_button_blue"
+                android:background="@drawable/round_button_yellow"
                 android:gravity="center"
                 android:text="Refresh"
                 android:textAlignment="center"

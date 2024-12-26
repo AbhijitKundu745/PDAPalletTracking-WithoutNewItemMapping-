@@ -84,6 +84,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String K_ITEM_CODE = "K_ITEM_CODE";
 
 
+
     public DatabaseHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
         //3rd argument to be passed is CursorFactory instance
@@ -588,20 +589,24 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         }
     }
     public ArrayList<String> getAllAssetNamesForSearchSpinner() {
-        ArrayList<String> searchogs = new ArrayList<String>();
-        SQLiteDatabase db = this.getWritableDatabase();
-        String selectQuery = "SELECT  * FROM " + TABLE_ASSET_MASTER;
-        Cursor cursor = db.rawQuery(selectQuery, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                //AppConstants.ASSET_TYPE_SPLIT_DATA
-                String assetname = cursor.getString(cursor.getColumnIndexOrThrow(K_ASSET_NAME));
-                String assetid = cursor.getString(cursor.getColumnIndexOrThrow(K_ASSET_ID));
-                searchogs.add(assetname+AppConstants.ASSET_TYPE_SPLIT_DATA+assetid);
-            } while (cursor.moveToNext());
-        }
-        return searchogs;
+//        ArrayList<String> searchogs = new ArrayList<String>();
+//        SQLiteDatabase db = this.getWritableDatabase();
+//        String selectQuery = "SELECT  * FROM " + TABLE_ASSET_MASTER;
+//        Cursor cursor = db.rawQuery(selectQuery, null);
+//
+//        if (cursor.moveToFirst()) {
+//            do {
+//                //AppConstants.ASSET_TYPE_SPLIT_DATA
+//                String assetname = cursor.getString(cursor.getColumnIndexOrThrow(K_ASSET_NAME));
+//                String assetid = cursor.getString(cursor.getColumnIndexOrThrow(K_ASSET_ID));
+//                searchogs.add(assetname+AppConstants.ASSET_TYPE_SPLIT_DATA+assetid);
+//            } while (cursor.moveToNext());
+//        }
+//        return searchogs;
+        String selectQuery = "SELECT " + K_ASSET_NAME + "|| '"
+                + AppConstants.ASSET_TYPE_SPLIT_DATA + "' || " + K_ASSET_ID +
+                " AS name FROM " + TABLE_ASSET_MASTER;
+        return  getStringList(selectQuery, "name");
     }
 
     public ArrayList<String> getAllNonRegisteredAssetList() {
@@ -1999,19 +2004,32 @@ try{
         }
     }
     public ArrayList<String> getBinName(){
-        ArrayList<String> binDetails = new ArrayList<String>();
-        SQLiteDatabase db = this.getReadableDatabase();
+//        ArrayList<String> binDetails = new ArrayList<String>();
+//        SQLiteDatabase db = this.getReadableDatabase();
         String selectQuery = "SELECT "+K_PRODUCT_NAME+" FROM " + TABLE_PRODUCT_MASTER+" WHERE "+K_PRODUCT_TAG_ID+" LIKE '1403%' ORDER BY "+K_PRODUCT_NAME+" ASC" ;
-        Cursor cursor = db.rawQuery(selectQuery, null);
+//        Cursor cursor = db.rawQuery(selectQuery, null);
+//
+//        if (cursor.moveToFirst()) {
+//            do {
+//                //AppConstants.ASSET_TYPE_SPLIT_DATA
+//                String binName = cursor.getString(cursor.getColumnIndexOrThrow(K_PRODUCT_NAME));
+//                binDetails.add(binName);
+//            } while (cursor.moveToNext());
+//        }
+        return getStringList(selectQuery, K_PRODUCT_NAME);
+    }
 
+    public ArrayList<String> getStringList(String sql, String columnName){
+        ArrayList<String> list = new ArrayList<String>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(sql, null);
         if (cursor.moveToFirst()) {
             do {
-                //AppConstants.ASSET_TYPE_SPLIT_DATA
-                String binName = cursor.getString(cursor.getColumnIndexOrThrow(K_PRODUCT_NAME));
-                binDetails.add(binName);
+                String value = cursor.getString(cursor.getColumnIndexOrThrow(columnName));
+                list.add(value);
             } while (cursor.moveToNext());
         }
-        return binDetails;
+        return list;
     }
     public void deleteSKUMaster() {
         SQLiteDatabase db = this.getWritableDatabase();

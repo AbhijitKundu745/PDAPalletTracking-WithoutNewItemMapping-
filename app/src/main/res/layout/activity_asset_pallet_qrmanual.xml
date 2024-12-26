@@ -84,23 +84,61 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="2dp" />
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/black"
-                android:textStyle="bold"
-                android:textSize="18sp"
-                android:text="DC No:"
-                android:paddingLeft="5dp"
-                android:background="@drawable/edittext_grey_background"/>
-            <TextView
-                android:id="@+id/DRN"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0.5"
+                    android:textColor="@color/black"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:text="DC No:"
+                    android:paddingLeft="5dp"
+                    android:background="@drawable/edittext_grey_background"/>
+                <TextView
+                    android:id="@+id/DRN"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:textColor="@color/orange1"
+                    android:textSize="18sp"
+                    android:paddingLeft="5dp"
+                    android:singleLine="true"
+                    android:ellipsize="marquee"
+                    android:background="@drawable/edittext_grey_background"/>
+            </LinearLayout>
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:textColor="@color/orange1"
-                android:textSize="18sp"
-                android:paddingLeft="5dp"
-                android:background="@drawable/edittext_grey_background"/>
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/remainingskuQty"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Remaining SKU Qty: 0"
+                    android:textColor="@color/orange"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="5dp"
+                    android:gravity="start"/>
+                <TextView
+                    android:id="@+id/remainingQty"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Remaining Total Qty: 0"
+                    android:textColor="@color/orange"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="5dp"
+                    android:gravity="end"/>
+            </LinearLayout>
+
+
             <View
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
@@ -274,8 +312,8 @@
                     android:layout_marginLeft="5dp"
                     android:inputType="numberDecimal"
                     android:gravity="center"
-                    android:digits="0123456789.12"
-                    android:maxLength="3"
+                    android:digits="0123456789.1234"
+                    android:maxLength="8"
                     android:background="@drawable/edittext_grey_background"/>
             </LinearLayout>
             <View

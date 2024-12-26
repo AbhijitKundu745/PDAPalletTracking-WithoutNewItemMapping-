@@ -52,13 +52,13 @@ public class CustomRecyclerViewDashboardAdapter extends RecyclerView.Adapter {
         String image = dashboardModelList.get(position).getMenuimageName();
         switch (menu_id){
             case AppConstants.MENU_ID_CARTON_PALLET_MAPPING:
-                Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.mipmap.ic_launcher_inwardpallet_foreground).override(100,100)).into(((MyViewHolder) holder).image);
+                Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.drawable.inwardpallet).override(100,100)).into(((MyViewHolder) holder).image);
                 break;
             case AppConstants.MENU_ID_ITEM_PALLET_MAPPING:
-                    Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.mipmap.ic_launcher_outwardpallet_foreground).override(100,100)).into(((MyViewHolder) holder).image);
+                    Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.drawable.outwardpallet).override(100,100)).into(((MyViewHolder) holder).image);
                     break;
             case AppConstants.MENU_ID_PALLET_MOVEMENT:
-                Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.mipmap.ic_launcher_palletmovement_foreground).override(100,100)).into(((MyViewHolder) holder).image);
+                Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.drawable.palletmovement).override(100,100)).into(((MyViewHolder) holder).image);
                 break;
             case AppConstants.MENU_ID_CONTAINER_PALLET_MAPPING:
                 Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.drawable.mapping).override(100,100)).into(((MyViewHolder) holder).image);
@@ -67,7 +67,7 @@ public class CustomRecyclerViewDashboardAdapter extends RecyclerView.Adapter {
                 Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.drawable.dispatchpalletcreation).override(100,100)).into(((MyViewHolder) holder).image);
                 break;
             case AppConstants.MENU_ID_ITEM_MOVEMENT:
-                Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.mipmap.ic_launcher_itemmovement).override(100,100)).into(((MyViewHolder) holder).image);
+                Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.drawable.itemmovement).override(100,100)).into(((MyViewHolder) holder).image);
                 break;
             case AppConstants.MENU_ID_INVENTORY:
                 Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.drawable.inventory).override(100,100)).into(((MyViewHolder) holder).image);
@@ -85,7 +85,7 @@ public class CustomRecyclerViewDashboardAdapter extends RecyclerView.Adapter {
                 Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.drawable.checkout).override(100,100)).into(((MyViewHolder) holder).image);
                 break;
             case AppConstants.MENU_ID_ASSETSYNC:
-                Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.mipmap.ic_launcher_sync_foreground).override(100,100)).into(((MyViewHolder) holder).image);
+                Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.drawable.sync).override(100,100)).into(((MyViewHolder) holder).image);
                 break;
             case AppConstants.MENU_ID_TRACKPOINT:
                 Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.drawable.checkout).override(100,100)).into(((MyViewHolder) holder).image);
@@ -93,9 +93,12 @@ public class CustomRecyclerViewDashboardAdapter extends RecyclerView.Adapter {
             case AppConstants.MENU_ID_SECURITYOUT:
                 Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.drawable.checkout).override(100,100)).into(((MyViewHolder) holder).image);
                 break;
-                case AppConstants.MENU_ID_MAP_PARTIAL_PALLET:
+            case AppConstants.MENU_ID_MAP_PARTIAL_PALLET:
                 Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.drawable.mapping).override(100,100)).into(((MyViewHolder) holder).image);
                 break;
+//            case AppConstants.MENU_ID_STOCK_RECORD:
+//                Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.drawable.track).override(100,100)).into(((MyViewHolder) holder).image);
+//                break;
             default:
                 Glide.with(context).load(image).apply(new RequestOptions().placeholder(R.drawable.inventory).override(100,100)).into(((MyViewHolder) holder).image);
                 break;

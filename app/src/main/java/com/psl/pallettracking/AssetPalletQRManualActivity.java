@@ -78,14 +78,15 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
     Scanner scanner;
     String DC_NO = "";
     String processType = null;
-    String Qty  = "0";
+    String Qty  = "0.0";
     List<ItemDetailsList> itemDetailsLists, originalItemList;
     private String Password = "PASSRECEIVING007";
-    private int EXCEEDED_QTY = 0;
+    private double EXCEEDED_QTY = 0.0;
     private String DIFF_SKU = "";
     private String EXCEEDED_SKU = "";
     private String skuCode = "";
-    private int quantity = 0;
+    private double quantity = 0.0;
+    private double remainQty = 0.0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,13 +106,14 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
         binding.DRN.setSelected(true);
 
         processType = SharedPreferencesManager.getProcessType(context);
-
-        setDefault();
-        mediaPlayer = MediaPlayer.create(context, R.raw.beep);
-        mediaPlayerErr = MediaPlayer.create(context,R.raw.error);
         if (itemDetailsLists != null) {
             itemDetailsLists.clear();
         }
+        setDefault();
+
+        mediaPlayer = MediaPlayer.create(context, R.raw.beep);
+        mediaPlayerErr = MediaPlayer.create(context,R.raw.error);
+
         itemDetailsLists = new ArrayList<>();
         originalItemList = new ArrayList<>();
         SharedPreferencesManager.setPower(context, 10);
@@ -122,7 +124,7 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
             @Override
             public void onClick(View v) {
                 Qty = binding.edtQty.getText().toString();
-                quantity = Qty.isEmpty() || Qty == null ? 0 : Integer.parseInt(Qty);
+                quantity = Qty.isEmpty() || Qty == null ? 0.0 : Double.parseDouble(Qty);
                 Log.e("QTY", Qty);
                 Log.e("QTY1", String.valueOf(quantity) );
 
@@ -131,11 +133,11 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
                         if(quantity != 0){
                             ItemDetailsList item = getItemBySkuCode(skuCode);
                             if (item != null) {
-                                int scannedQty = 0;
-                                if (Integer.parseInt(item.getPickedQty()) >= quantity) {
+                                double scannedQty = 0;
+                                if (Double.parseDouble(item.getPickedQty()) >= quantity) {
                                     showCustomConfirmationDialog("Are you sure you want to upload", "UPLOAD");
                                 } else {
-                                    int pickedQty = Integer.parseInt(item.getPickedQty());
+                                    double pickedQty = Double.parseDouble(item.getPickedQty());
                                     pickedQty = pickedQty <= 0 ? 0 : pickedQty;
                                     EXCEEDED_QTY = quantity - pickedQty;
                                     EXCEEDED_SKU = skuCode;
@@ -366,7 +368,6 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
             @Override
             public void run() {
                 getSKUDetails(DC_NO);
-                PALLET_TAG_ID = "";
                 QR_CODE = "";
                 Qty = "0";
                 CURRENT_EPC = "";
@@ -374,13 +375,11 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
                 IS_SCANNING_ALREADY_STARTED = false;
                 changeImageStatusToRfidScan();
                 binding.imgStatus.setImageDrawable(getDrawable(R.drawable.rfidscan));
-                binding.edtRfidNumber.setText("");
                 binding.edtQrCode.setText("");
                 binding.batchID.setText("");
                 binding.edtQty.setText("");
                 binding.edtskuName.setText("");
                 allow_trigger_to_press = true;
-                IS_PALLET_TAG_SCANNED = false;
                 IS_QR_CODE_SCANNED = false;
                 EXCEEDED_QTY = 0;
                 EXCEEDED_SKU = "";
@@ -392,6 +391,19 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
                 if (tagList != null) {
                     tagList.clear();
                 }
+                END_DATE = "";
+                if(SharedPreferencesManager.getWarehouseId(context) == 4){
+                    IS_PALLET_TAG_SCANNED = true;
+                    binding.edtRfidNumber.setText("CWC_P1");
+                    START_DATE = AssetUtils.getSystemDateTimeInFormatt();
+                    PALLET_TAG_ID = "14020000000150534C202020";
+                } else {
+                    PALLET_TAG_ID = "";
+                    IS_PALLET_TAG_SCANNED = false;
+                    START_DATE = "";
+                    binding.edtRfidNumber.setText("");
+                }
+                binding.remainingskuQty.setText("Remaining SKU Qty: 0");
             }
         });
     }
@@ -570,6 +582,7 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
                     jsonobject.put(APIConstants.K_TRUCK_NUMBER, SharedPreferencesManager.getTruckNumber(context));
                     jsonobject.put(APIConstants.K_PROCESS_TYPE, SharedPreferencesManager.getProcessType(context));
                     jsonobject.put(APIConstants.K_DRN, DC_NO);
+                    jsonobject.put(APIConstants.K_WAREHOUSE_ID, SharedPreferencesManager.getWarehouseId(context));
                     //jsonobject.put(APIConstants.K_PALLET_ID, CURRENT_EPC);
                     JSONArray js = new JSONArray();
                     for (int i = 0; i < 1; i++) {
@@ -719,12 +732,18 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
                 Log.e("BatchID", batchID);
             }
             if(db.isSKUExist(skuCode)){
+                mediaPlayer.start();
                 IS_QR_CODE_SCANNED = true;
                 binding.edtQrCode.setText(Qrcode);
                 binding.batchID.setText(batchID);
                 binding.edtskuName.setText(db.getItemNameByItemCode(skuCode));
+                ItemDetailsList item = getItemBySkuCode(skuCode);
+                if(item!=null){
+                    binding.remainingskuQty.setText("Remaining SKU Qty: "+item.getPickedQty());
+                }
             }
             else{
+                mediaPlayerErr.start();
                 AssetUtils.showCommonBottomSheetErrorDialog(context, skuCode+" doesn't exist. Please contact admin.");
             }
 
@@ -739,6 +758,7 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
         }
         else {
             // Barcode format does not match, handle accordingly
+            mediaPlayerErr.start();
             AssetUtils.showCommonBottomSheetErrorDialog(context, "Barcode format does not match the expected format");
         }
     }
@@ -812,6 +832,7 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
     }
 
     private void parseSKUDetails(JSONArray dataArray) {
+        remainQty = 0;
         if (itemDetailsLists != null) {
             itemDetailsLists.clear();
 
@@ -830,11 +851,12 @@ public class AssetPalletQRManualActivity extends AppCompatActivity implements De
                     itemList.setOriginalPickedQty(PickedQty);
                     itemDetailsLists.add(itemList);
                     originalItemList.add(itemList);
-
+                    remainQty += Double.parseDouble(PickedQty);
                 } catch (JSONException e) {
                     AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
                 }
             }
+            binding.remainingQty.setText("Remaining Total Qty: "+ remainQty);
         }
     }
     public void showCustomConfirmationDialogForSpecial(String msg, final String action) {

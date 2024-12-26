@@ -3,22 +3,28 @@ package com.psl.pallettracking;
 import static com.psl.pallettracking.helper.AssetUtils.hideProgressDialog;
 import static com.psl.pallettracking.helper.AssetUtils.showProgress;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.EditText;
+import android.widget.ListView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
 import com.androidnetworking.AndroidNetworking;
-import com.androidnetworking.BuildConfig;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.JSONObjectRequestListener;
 import com.psl.pallettracking.adapters.DashboardModel;
+import com.psl.pallettracking.adapters.SearchableAdapter;
 import com.psl.pallettracking.database.AssetMaster;
 import com.psl.pallettracking.database.DatabaseHandler;
 import com.psl.pallettracking.databinding.ActivityLoginBinding;
@@ -33,6 +39,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -44,6 +51,14 @@ public class LoginActivity extends AppCompatActivity {
     private Context context = this;
     private DatabaseHandler db;
     private ConnectionDetector cd;
+    private HashMap<String, Integer> warehouseList = new HashMap<>();
+    List<String> warehouseNames = new ArrayList<>();
+    Dialog dialog;
+    private String SELECTED_ITEM = "";
+    private String default_source_item = "Select Warehouse";
+    SearchableAdapter searchableAdapter;
+    private Boolean IS_WAREHOSE_SELECTED = false;
+    private Integer warehouseID = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +80,7 @@ public class LoginActivity extends AppCompatActivity {
         Log.e("DEVICEID", androidID);
 
         if (SharedPreferencesManager.getIsHostConfig(context)) {
-
+            getWarehouseDetails();
         } else {
             AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.url_not_config));
         }
@@ -112,20 +127,23 @@ public class LoginActivity extends AppCompatActivity {
                 }*/
                 if (user.equalsIgnoreCase("") || password.equalsIgnoreCase("")) {
                     AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.login_data_validation));
-                } else {
-                    try {
-                        JSONObject jsonObject = new JSONObject();
-                        jsonObject.put(APIConstants.K_USER, user);
-                        jsonObject.put(APIConstants.K_PASSWORD, password);
-                        jsonObject.put(APIConstants.K_DEVICE_ID, SharedPreferencesManager.getDeviceId(context));
-                        userLogin(jsonObject, APIConstants.M_USER_LOGIN, "Please wait...\n" + "User login is in progress");
+                } else if (!IS_WAREHOSE_SELECTED) {
+                    AssetUtils.showCommonBottomSheetErrorDialog(context, "Please select a warehouse");
+                }
+                  else  {
+                        try {
+                            JSONObject jsonObject = new JSONObject();
+                            jsonObject.put(APIConstants.K_USER, user);
+                            jsonObject.put(APIConstants.K_PASSWORD, password);
+                            jsonObject.put(APIConstants.K_DEVICE_ID, SharedPreferencesManager.getDeviceId(context));
+                            userLogin(jsonObject, APIConstants.M_USER_LOGIN, "Please wait...\n" + "User login is in progress");
 
                        /* Intent loginIntent = new Intent(LoginActivity.this, DashboardActivity.class);
                         startActivity(loginIntent);*/
-                    } catch (JSONException e) {
+                        } catch (JSONException e) {
 
+                        }
                     }
-                }
             } else {
                 AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.url_not_config));
             }
@@ -149,7 +167,82 @@ public class LoginActivity extends AppCompatActivity {
             SharedPreferencesManager.setSavedPassword(context, "");
             binding.chkRemember.setChecked(false);
         });
-        binding.textDeviceId.setText("Share device ID to admin for device registration\nDevice ID: " + SharedPreferencesManager.getDeviceId(context) + "\nIgnore if device already registered.");
+        binding.textDeviceId.setText("Device ID: " + SharedPreferencesManager.getDeviceId(context));
+        binding.searchableTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (SharedPreferencesManager.getIsHostConfig(context)) {
+                    // Initialize dialog
+                    dialog = new Dialog(context);
+
+                    // set custom dialog
+                    dialog.setContentView(R.layout.dialog_searchable_spinner);
+
+                    // set custom height and width
+                    dialog.getWindow().setLayout(1000, 800);
+
+                    // set transparent background
+                    dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+                    // show dialog
+                    dialog.show();
+
+                    // Initialize and assign variable
+                    EditText editText = dialog.findViewById(R.id.edit_text);
+                    ListView listView = dialog.findViewById(R.id.list_view);
+
+                    // Initialize array adapter
+                    searchableAdapter = new SearchableAdapter(context, warehouseNames);
+
+                    // set adapter
+                    listView.setAdapter(searchableAdapter);
+                    editText.setVisibility(View.GONE);
+//                    editText.addTextChangedListener(new TextWatcher() {
+//                        @Override
+//                        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//
+//                        }
+//
+//                        @Override
+//                        public void onTextChanged(CharSequence s, int start, int before, int count) {
+//                            searchableAdapter.getFilter().filter(s);
+//                        }
+//
+//                        @Override
+//                        public void afterTextChanged(Editable s) {
+//
+//                        }
+//                    });
+
+                    listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                            // when item selected from list
+                            // set selected item on textView
+                            // Dismiss dialog
+                            dialog.dismiss();
+                            SELECTED_ITEM = (String) searchableAdapter.getItem(position);
+                            binding.searchableTextView.setText(SELECTED_ITEM);
+                            if (SELECTED_ITEM.equalsIgnoreCase(default_source_item) || SELECTED_ITEM.equalsIgnoreCase("")) {
+                                SELECTED_ITEM = "";
+                                IS_WAREHOSE_SELECTED = false;
+
+                            } else {
+                                IS_WAREHOSE_SELECTED = true;
+                                warehouseID = warehouseList.get(SELECTED_ITEM);
+                            }
+
+                        }
+                    });
+
+                }
+             else {
+                AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.url_not_config));
+            }
+
+            }
+        });
     }
 
 
@@ -347,8 +440,10 @@ public class LoginActivity extends AppCompatActivity {
                                 } else {
                                     SharedPreferencesManager.setIsLoginSaved(context, false);
                                 }
-
+                                SharedPreferencesManager.setWarehouseId(context, warehouseID);
+                                Log.e("WID", ""+warehouseID);
                                 if (db.getDashboardMenuCount() > 0) {
+
                                     Intent loginIntent = new Intent(LoginActivity.this, DashboardActivity.class);
                                     startActivity(loginIntent);
                                 } else {
@@ -374,5 +469,79 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    public void getWarehouseDetails() {
+        OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
+                .connectTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                .readTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                .writeTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
+                .build();
 
+        Log.e("URL", SharedPreferencesManager.getHostUrl(context) + APIConstants.M_GET_WAREHOUSE_MASTER);
+        AndroidNetworking.get(SharedPreferencesManager.getHostUrl(context) + APIConstants.M_GET_WAREHOUSE_MASTER)
+                .setTag("test")
+                .setPriority(Priority.LOW)
+                .setOkHttpClient(okHttpClient) // passing a custom okHttpClient
+                .build()
+                .getAsJSONObject(new JSONObjectRequestListener() {
+                    @Override
+                    public void onResponse(JSONObject result) {
+                        hideProgressDialog();
+                        if(result!=null){
+                            try{
+                                if (result.getBoolean(APIConstants.K_STATUS)) {
+                                    JSONArray dataArray = result.getJSONArray("data");
+                                    if(warehouseList != null){
+                                        warehouseList.clear();
+                                    }
+                                    if(warehouseNames != null){
+                                        warehouseNames.clear();
+                                    }
+                                    if (dataArray.length() > 0) {
+                                        for (int i = 0; i < dataArray.length(); i++) {
+                                            JSONObject dataObject = dataArray.getJSONObject(i);
+                                            String WarehouseName = dataObject.getString(APIConstants.K_WAREHOUSE_NAME);
+                                            int WarehouseID = dataObject.getInt(APIConstants.K_WAREHOUSE_ID);
+
+                                            warehouseList.put(WarehouseName, WarehouseID);
+                                            warehouseNames.add(WarehouseName);
+                                            Log.e("Warehouses", warehouseList.toString());
+                                        }
+                                    }
+                                }
+                            }
+                            catch (JSONException e){
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.something_went_wrong_error));
+                            }
+                        }
+                        else {
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.communication_error));
+                        }
+                    }
+
+                    @Override
+                    public void onError(ANError anError) {
+                        hideProgressDialog();
+                        Log.e("ERROR", anError.getErrorDetail());
+                        if (anError.getErrorDetail().equalsIgnoreCase("responseFromServerError")) {
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.communication_error));
+                        } else if (anError.getErrorDetail().equalsIgnoreCase("connectionError")) {
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
+                        } else {
+                            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
+                        }
+                        //}
+
+                    }
+                });
+    }
+
+    @Override
+    protected void onResume() {
+        if (SharedPreferencesManager.getIsHostConfig(context)) {
+            getWarehouseDetails();
+        } else {
+            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.url_not_config));
+        }
+        super.onResume();
+    }
 }

@@ -115,6 +115,7 @@ public class BinPartialPalletMappingActivity extends AppCompatActivity {
         try {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put(APIConstants.K_DEVICE_ID, SharedPreferencesManager.getDeviceId(context));
+            jsonObject.put(APIConstants.K_WAREHOUSE_ID, SharedPreferencesManager.getWarehouseId(context));
             Log.e("JSONReq", SharedPreferencesManager.getHostUrl(context)+ APIConstants.M_GET_PARTIAL_WORK_ORDERS);
             OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
                     .connectTimeout(APIConstants.API_TIMEOUT, TimeUnit.SECONDS)
@@ -206,7 +207,7 @@ public class BinPartialPalletMappingActivity extends AppCompatActivity {
 
     public void onBinPartialPalletMappingWorkOrderListItemClicked(BinPartialPalletMappingAdapterModel order) {
         stopWorkOrderPollingApiHandler();
-        Intent i = new Intent(BinPartialPalletMappingActivity.this,BinPartialPalletMapProcessActivity.class);
+        Intent i = new Intent(BinPartialPalletMappingActivity.this, DispatchPalletCreationActivity.class);
         i.putExtra("WorkOrderNumber",order.getWorkOrdernumber());
         i.putExtra("WorkOrderType",order.getWorkOrderStatus());
         i.putExtra("DRN", order.getDRN());

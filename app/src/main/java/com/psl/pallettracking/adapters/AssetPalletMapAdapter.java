@@ -76,14 +76,18 @@ public class AssetPalletMapAdapter extends BaseAdapter {
             Log.e("SKU", skuCode);
         }
 
-        holder.textAssetName.setText(SerialNo+","+ItemName);
-        if (position % 2 != 0) {
-            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.cyan1));
-        } else {
-            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.lemonyellow));
-        }
-        if (tagList.get(position).get("STATUS").equalsIgnoreCase("false")) {
-            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.red));
+
+        holder.textAssetName.setText(SerialNo+","+ItemName+"("+skuCode+")");
+
+
+        if (tagList.get(position).get("STATUS").equalsIgnoreCase("Damage")) {
+            convertView.setBackgroundColor(mContext.getResources().getColor(R.color.red6));
+        } else{
+            if (position % 2 != 0) {
+                convertView.setBackgroundColor(mContext.getResources().getColor(R.color.cyan1));
+            } else {
+                convertView.setBackgroundColor(mContext.getResources().getColor(R.color.lemonyellow));
+            }
         }
 
         convertView.setOnClickListener(new View.OnClickListener() {

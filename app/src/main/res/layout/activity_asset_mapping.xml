@@ -30,26 +30,26 @@
             android:textColor="@color/red"
             android:textSize="18sp"
             android:text="Asset Name *"/>
-        <gr.escsoft.michaelprimez.searchablespinner.SearchableSpinner
-            android:id="@+id/spAsset"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            app:StartSearchTintColor="@color/black"
-            android:background="@drawable/edit_text_background"
-            app:DoneSearchTintColor="@android:color/black"
-            app:RevealViewBackgroundColor="@android:color/transparent"
-            app:SearchViewBackgroundColor="@android:color/transparent"
-            app:ShowBorders="true"
-            app:SearchViewTextColor="@color/black"
-            app:NoItemsFoundText=""
-            app:RevealEmptyText="Select Asset"
-            app:DividerHeight="1dp"
-            android:soundEffectsEnabled="true"
-            app:SearchHintText="Tap to search"
-            app:SpinnerExpandHeight="200dp"
-            android:layout_marginBottom="5dp"
-            />
+<!--        <gr.escsoft.michaelprimez.searchablespinner.SearchableSpinner-->
+<!--            android:id="@+id/spAsset"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:gravity="center_vertical"-->
+<!--            app:StartSearchTintColor="@color/black"-->
+<!--            android:background="@drawable/edit_text_background"-->
+<!--            app:DoneSearchTintColor="@android:color/black"-->
+<!--            app:RevealViewBackgroundColor="@android:color/transparent"-->
+<!--            app:SearchViewBackgroundColor="@android:color/transparent"-->
+<!--            app:ShowBorders="true"-->
+<!--            app:SearchViewTextColor="@color/black"-->
+<!--            app:NoItemsFoundText=""-->
+<!--            app:RevealEmptyText="Select Asset"-->
+<!--            app:DividerHeight="1dp"-->
+<!--            android:soundEffectsEnabled="true"-->
+<!--            app:SearchHintText="Tap to search"-->
+<!--            app:SpinnerExpandHeight="200dp"-->
+<!--            android:layout_marginBottom="5dp"-->
+<!--            />-->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

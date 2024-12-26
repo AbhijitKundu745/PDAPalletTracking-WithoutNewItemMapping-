@@ -14,7 +14,9 @@
         android:layout_gravity="center_vertical"
         android:gravity="center_vertical"
         android:layout_height="35dp"
-        android:text="Asset Name"/>
+        android:text="Asset Name"
+        android:textStyle="bold"
+        android:textColor="@color/black"/>
     <ImageView
         android:id="@+id/imgView"
         android:layout_width="35dp"

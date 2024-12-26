@@ -158,8 +158,8 @@
                     android:layout_marginLeft="5dp"
                     android:inputType="numberDecimal"
                     android:gravity="center"
-                    android:digits="0123456789.12"
-                    android:maxLength="3"
+                    android:digits="0123456789.1234"
+                    android:maxLength="8"
                     android:background="@drawable/edittext_grey_background"/>
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -168,21 +168,18 @@
                 android:orientation="horizontal"
                 android:layout_marginTop="5dp"
                 android:layout_height="wrap_content">
-                <TextView
-                    android:id="@+id/textCount"
-                    android:layout_width="0dp"
-                    android:layout_weight="0.8"
-                    android:layout_height="match_parent"
-                    android:textColor="@color/red"
-                    android:gravity="center"
-                    android:textSize="18sp"
-                    android:visibility="gone"
-                    android:text="Count : 0"/>
-                <TextView
+
+                <androidx.appcompat.widget.AppCompatEditText
+                    android:id="@+id/batchID"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="match_parent"
-                    android:textSize="18sp" />
+                    android:textSize="18sp"
+                    android:textColor="@color/orange"
+                    android:textColorHint="@color/gray2"
+                    android:hint="Batch ID"
+                    android:gravity="center"
+                    android:background="@drawable/linear_bg"/>
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btnAdd"
                     android:layout_width="0dp"
@@ -198,6 +195,16 @@
                     android:layout_height="30dp"/>
 
             </androidx.appcompat.widget.LinearLayoutCompat>
+            <TextView
+                android:id="@+id/textCount"
+                android:layout_width="match_parent"
+                android:layout_weight="0.1"
+                android:layout_height="0dp"
+                android:textColor="@color/red"
+                android:gravity="end"
+                android:textSize="18sp"
+                android:visibility="visible"
+                android:text="Count : 0"/>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

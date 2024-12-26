@@ -27,6 +27,8 @@ import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.JSONObjectRequestListener;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.snackbar.Snackbar;
 import com.psl.pallettracking.adapters.AssetPalletMapAdapter;
 import com.psl.pallettracking.adapters.skuitemListAdapter;
 import com.psl.pallettracking.database.DatabaseHandler;
@@ -35,6 +37,8 @@ import com.psl.pallettracking.helper.APIConstants;
 import com.psl.pallettracking.helper.AppConstants;
 import com.psl.pallettracking.helper.AssetUtils;
 import com.psl.pallettracking.helper.ConnectionDetector;
+import com.psl.pallettracking.helper.MqttPublisher;
+import com.psl.pallettracking.helper.MqttSubscriber;
 import com.psl.pallettracking.helper.SharedPreferencesManager;
 import com.psl.pallettracking.helper.StringUtils;
 import com.psl.pallettracking.rfid.RFIDInterface;
@@ -47,6 +51,12 @@ import com.seuic.scanner.ScannerFactory;
 import com.seuic.scanner.ScannerKey;
 import com.seuic.uhf.EPC;
 
+import org.eclipse.paho.mqttv5.client.IMqttToken;
+import org.eclipse.paho.mqttv5.client.MqttCallback;
+import org.eclipse.paho.mqttv5.client.MqttDisconnectResponse;
+import org.eclipse.paho.mqttv5.common.MqttException;
+import org.eclipse.paho.mqttv5.common.MqttMessage;
+import org.eclipse.paho.mqttv5.common.packet.MqttProperties;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -54,11 +64,13 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
+import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.OkHttpClient;
 
 public class AssetPalletMappingActivity extends AppCompatActivity implements DecodeInfoCallBack {
+
     private Context context = this;
     private SeuicGlobalRfidHandler rfidHandler;
     private ActivityAssetPalletMappingBinding binding;
@@ -74,6 +86,8 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
     boolean IS_SCANNING_LOCKED = false;
     boolean IS_SCANNING_ALREADY_STARTED = false;
     private boolean allow_trigger_to_press = true;
+//    MqttPublisher publisher;
+//    MqttSubscriber subscriber;
 
     public ArrayList<HashMap<String, String>> tagList = new ArrayList<HashMap<String, String>>();
     public ArrayList<HashMap<String, String>> barcodeList = new ArrayList<HashMap<String, String>>();
@@ -120,7 +134,6 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
 
 
         activity_type = db.getMenuActivityNameByMenuID(menu_id);
-        Log.e("TYPE",activity_type);
 
         adapter = new AssetPalletMapAdapter(context, barcodeList);
         binding.LvTags.setAdapter(adapter);
@@ -143,6 +156,7 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
         processType = SharedPreferencesManager.getProcessType(context);
 
         setDefault();
+
         mediaPlayer = MediaPlayer.create(context, R.raw.beep);
         mediaPlayerErr = MediaPlayer.create(context,R.raw.error);
 
@@ -151,7 +165,7 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
         binding.btnUpload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (tagList.size() > 0) {
+                if (barcodeList.size() > 0) {
                     if(!IS_DIFFERENT_SKU){
                         if(!IS_QTY_EXCEED){
                             showCustomConfirmationDialog("Are you sure you want to upload", "UPLOAD","","");
@@ -164,6 +178,9 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
                         showCustomConfirmationDialogForSpecial("Do you want to save the different SKU?\n" + "SKU: "+ DIFF_SKU, "UPLOAD");
                     }
                 }
+                else{
+                    AssetUtils.showCommonBottomSheetErrorDialog(context, "There are no items to upload");
+                }
             }
         });
 
@@ -175,20 +192,14 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
                 }
             }
         });
-        binding.btnClear.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (allow_trigger_to_press) {
-                    showCustomConfirmationDialog(getResources().getString(R.string.confirm_cancel_scanning), "CANCEL","","");
-                }
+        binding.btnClear.setOnClickListener(v -> {
+            if (allow_trigger_to_press) {
+                showCustomConfirmationDialog(getResources().getString(R.string.confirm_cancel_scanning), "CANCEL","","");
             }
         });
-        binding.btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (allow_trigger_to_press) {
-                    showCustomConfirmationDialog(getResources().getString(R.string.confirm_cancel_scanning), "BACK","","");
-                }
+        binding.btnBack.setOnClickListener(v -> {
+            if (allow_trigger_to_press) {
+                showCustomConfirmationDialog(getResources().getString(R.string.confirm_cancel_scanning), "BACK","","");
             }
         });
         AssetUtils.showProgress(context, getResources().getString(R.string.uhf_initialization));
@@ -308,6 +319,41 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
                 });
             }
         });
+//        subscriber = new MqttSubscriber();
+//        subscriber.subscribe("test/topic", new MqttCallback() {
+//            @Override
+//            public void disconnected(MqttDisconnectResponse disconnectResponse) {
+//                Log.d("Disconnected Message", disconnectResponse.getReasonString());
+//            }
+//
+//            @Override
+//            public void mqttErrorOccurred(MqttException exception) {
+//                Log.e("Exception Message", exception.getMessage());
+//            }
+//
+//            @Override
+//            public void messageArrived(String topic, MqttMessage message) throws Exception {
+//                Log.d("Received Message", new String(message.getPayload()));
+//                String receivedMessage =  new String(message.getPayload());
+//                Log.d("Received Message1", receivedMessage);
+//                Toast.makeText(context, "rec", Toast.LENGTH_SHORT).show();
+//            }
+//
+//            @Override
+//            public void deliveryComplete(IMqttToken token) {
+//                Log.d("Delivery Complete", "Message delivered");
+//            }
+//
+//            @Override
+//            public void connectComplete(boolean reconnect, String serverURI) {
+//                Log.d("Connected Message", "connected to: " + serverURI);
+//            }
+//
+//            @Override
+//            public void authPacketArrived(int reasonCode, MqttProperties properties) {
+//                Log.d("Auth Packet Arrived", "Auth reason: " + reasonCode);
+//            }
+//        });
     }
 
     @Override
@@ -450,7 +496,6 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
             @Override
             public void run() {
                 getSKUDetails(DC_NO);
-                PALLET_TAG_ID = "";
                 CURRENT_EPC = "";
                 EXCEEDED_SKU = "";
                 EXCEEDED_QTY = 0;
@@ -461,9 +506,7 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
                 IS_SCANNING_ALREADY_STARTED = false;
                 changeImageStatusToRfidScan();
                 binding.imgStatus.setImageDrawable(getDrawable(R.drawable.rfidscan));
-                binding.edtRfidNumber.setText("");
                 allow_trigger_to_press = true;
-                IS_PALLET_TAG_SCANNED = false;
                 binding.textHint.setVisibility(View.GONE);
                 binding.textCount.setVisibility(View.GONE);
                 if (epcs != null) {
@@ -479,6 +522,18 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
                     barcodes.clear();
                 }
                 binding.textCount.setText("Count : " + barcodeList.size());
+                END_DATE = "";
+                if(SharedPreferencesManager.getWarehouseId(context) == 4){
+                    IS_PALLET_TAG_SCANNED = true;
+                    binding.edtRfidNumber.setText("CWC_P1");
+                    START_DATE = AssetUtils.getSystemDateTimeInFormatt();
+                    PALLET_TAG_ID = "14020000000150534C202020";
+                } else{
+                    PALLET_TAG_ID = "";
+                    IS_PALLET_TAG_SCANNED = false;
+                    START_DATE = "";
+                    binding.edtRfidNumber.setText("");
+                }
             }
         });
     }
@@ -668,44 +723,44 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
         dialogButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                customConfirmationDialog.dismiss();
-                if (action.equals("UPLOAD")) {
-                    allow_trigger_to_press = false;
-                    uploadInventoryToServer();
-                } else if (action.equals("CANCEL")) {
-                    setDefault();
-                } else if (action.equals("BACK")) {
-                    setDefault();
-                    finish();
+                    customConfirmationDialog.dismiss();
+                    if (action.equals("UPLOAD")) {
+                        allow_trigger_to_press = false;
+                        uploadInventoryToServer();
+                    } else if (action.equals("CANCEL")) {
+                        setDefault();
+                    } else if (action.equals("BACK")) {
+                        setDefault();
+                        finish();
 
-                } else if (action.equals("DELETE")) {
-                    String[] parts;
-                    String skuCode = "";
-                    if (barcode.contains(",")) {
-                        parts = barcode.split("[,]+");
-                        Log.e("HERE1", parts.toString());
-                        skuCode = parts[1].trim().replaceAll("^0*", "");
-                    } else if (barcode.contains(" ")) {
-                        parts = barcode.split("\\s+");
-                        Log.e("HERE2", parts.toString());
-                        skuCode = parts[2].trim().replaceAll("^0*", "");
+                    } else if (action.equals("DELETE")) {
+                        String[] parts;
+                        String skuCode = "";
+                        if (barcode.contains(",")) {
+                            parts = barcode.split("[,]+");
+                            skuCode = parts[1].trim().replaceAll("^0*", "");
+                        } else if (barcode.contains(" ")) {
+                            parts = barcode.split("\\s+");
+                            skuCode = parts[2].trim().replaceAll("^0*", "");
+                        }
+                        ItemDetailsList item = getItemBySkuCode(skuCode);
+                        if (item != null) {
+                                EXCEEDED_QTY = EXCEEDED_QTY - 1;
+                                if(EXCEEDED_QTY == 0){
+                                    IS_QTY_EXCEED = false;
+                                    EXCEEDED_SKU = "";
+                                }
+                        }
+                        else{
+                            IS_DIFFERENT_SKU = false;
+                            DIFF_SKU = "";
+                        }
+                        barcodeList.remove(CURRENT_INDEX);
+                        barcodes.remove(CURRENT_INDEX);
+                        CURRENT_INDEX = -1;
+                        binding.textCount.setText("Count : " + barcodeList.size());
+                        adapter.notifyDataSetChanged();
                     }
-                    Log.e("HERE3", skuCode);
-                    ItemDetailsList item = getItemBySkuCode(skuCode);
-                    if (item != null) {
-                            EXCEEDED_QTY = EXCEEDED_QTY - 1;
-                            if(EXCEEDED_QTY == 0){
-                                IS_QTY_EXCEED = false;
-                                EXCEEDED_SKU = "";
-                                DIFF_SKU = "";
-                            }
-                    }
-                    barcodeList.remove(CURRENT_INDEX);
-                    barcodes.remove(CURRENT_INDEX);
-                    CURRENT_INDEX = -1;
-                    binding.textCount.setText("Count : " + barcodeList.size());
-                    adapter.notifyDataSetChanged();
-                }
 
             }
         });
@@ -755,14 +810,16 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
                     jsonobject.put(APIConstants.K_TRUCK_NUMBER, SharedPreferencesManager.getTruckNumber(context));
                     jsonobject.put(APIConstants.K_PROCESS_TYPE, SharedPreferencesManager.getProcessType(context));
                     jsonobject.put(APIConstants.K_DRN, DC_NO);
+                    jsonobject.put(APIConstants.K_WAREHOUSE_ID, SharedPreferencesManager.getWarehouseId(context));
                     //jsonobject.put(APIConstants.K_PALLET_ID, CURRENT_EPC);
                     JSONArray js = new JSONArray();
                     for (int i = 0; i < barcodeList.size(); i++) {
                         JSONObject barcodeObject = new JSONObject();
                         String epc = barcodeList.get(i).get("BARCODE");
+                        String Status =  barcodeList.get(i).get("STATUS");
                         //barcodeObject.put(APIConstants.K_ACTIVITY_DETAILS_ID, epc + AssetUtils.getSystemDateTimeInFormatt());
                         barcodeObject.put(APIConstants.K_ITEM_DESCRIPTION, epc);
-
+                        barcodeObject.put(APIConstants.K_ITEM_STATUS, Status);
                         //barcodeObject.put(APIConstants.K_ACTIVITY_ID, epc + AssetUtils.getSystemDateTimeInFormatt());
                         barcodeObject.put(APIConstants.K_TRANSACTION_DATE_TIME, AssetUtils.getSystemDateTimeInFormatt());
 
@@ -784,7 +841,8 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
         @Override
         protected void onPostExecute(JSONObject result) {
             super.onPostExecute(result);
-
+//publisher = new MqttPublisher();
+//publisher.connectAndPublish("test/topic", result.toString());
             if (result != null) {
                 if (cd.isConnectingToInternet()) {
                     try {
@@ -1020,7 +1078,7 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
         barcodeHashMap.put("BARCODE", barcode);
         barcodeHashMap.put("ASSETNAME", barcode);
         barcodeHashMap.put("COUNT", "1");
-        barcodeHashMap.put("STATUS", "true");
+        barcodeHashMap.put("STATUS", "Good");
         barcodeHashMap.put("MESSAGE", "");
             if (barcode.contains(",")) {
                 parts = barcode.split("[,]+");
@@ -1063,10 +1121,13 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
         } else {
             int tagCount = Integer.parseInt(barcodeList.get(index).get("COUNT"), 10) + 1;
             barcodeHashMap.put("COUNT", String.valueOf(tagCount));
-            barcodeList.set(index, barcodeHashMap);
-            AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.barcode_already_scanned));
+            //barcodeList.set(index, barcodeHashMap);
             mediaPlayerErr.start();
+            showDuplicateBarcodeDialog(barcode, index);
+            //AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.barcode_already_scanned));
+
         }
+        Log.e("Barcode", barcodeHashMap.toString());
         binding.textCount.setText("Count : " + barcodeList.size());
         adapter.notifyDataSetChanged();
         END_DATE = AssetUtils.getSystemDateTimeInFormatt();
@@ -1088,6 +1149,7 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
         } else {
             // Barcode format does not match, handle accordingly
             // For example, show an error message
+            mediaPlayerErr.start();
             AssetUtils.showCommonBottomSheetErrorDialog(context, "Barcode format does not match the expected format");
         }
     }
@@ -1153,7 +1215,6 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
             AssetUtils.showCommonBottomSheetErrorDialog(context, getResources().getString(R.string.internet_error));
         }
     }
-
     private void parseSKUDetails(JSONArray dataArray) {
         if (itemDetailsLists != null) {
             itemDetailsLists.clear();
@@ -1232,5 +1293,51 @@ public class AssetPalletMappingActivity extends AppCompatActivity implements Dec
             }
         }
         return null;
+    }
+    private void showDuplicateBarcodeDialog(final String barcode, final int index) {
+        BottomSheetDialog dialog = new BottomSheetDialog(context);
+        dialog.setContentView(R.layout.custom_bottom_sheet_duplicate_barcode_dialog);
+        dialog.setCancelable(false);
+
+        TextView errorMessage = dialog.findViewById(R.id.textMessage);
+
+
+        Button button = dialog.findViewById(R.id.damagedBtn);
+        if(barcodeList.get(index).get("STATUS").equalsIgnoreCase("Good")){
+            errorMessage.setText("Barcode/Qr code already scanned. Mark as Damage?");
+            button.setVisibility(View.VISIBLE);
+        } else{
+            errorMessage.setText("Barcode/Qr code already scanned and marked as damage.");
+            button.setVisibility(View.INVISIBLE);
+        }
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                    // Mark as Damaged
+                    barcodeList.get(index).put("STATUS", "Damage");
+                    Log.e("Stat", barcodeList.toString());
+                    dialog.dismiss();
+                    adapter.notifyDataSetChanged();
+            }
+        });
+
+        dialog.show();
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (dialog.isShowing()) {
+                    // Mark as Good if no action taken
+                    if(barcodeList.get(index).get("STATUS").equalsIgnoreCase("Good")){
+                        barcodeList.get(index).put("STATUS", "Good");
+                    } else {
+                        barcodeList.get(index).put("STATUS", "Damage");
+                    }
+                    Log.e("Stat", barcodeList.toString());
+                    dialog.dismiss();
+                    adapter.notifyDataSetChanged();
+                }
+            }
+        }, 5000); // 5 seconds
     }
 }

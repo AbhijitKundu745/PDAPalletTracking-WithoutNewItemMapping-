@@ -89,10 +89,9 @@ public class AssetPalletMappingDispatchActivity extends AppCompatActivity implem
     private String CURRENT_EPC = "";
     private String DC_TAG_ID = "";
     List<ItemDetailsList> itemDetailsLists, originalItemList;
-
     skuitemListAdapter adapter, confirmationAdapter;
     private String SKUCode = "";
-    private String Password = "PASS007";
+    private String Password = "PASSDISPATCH007";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -382,6 +381,7 @@ public class AssetPalletMappingDispatchActivity extends AppCompatActivity implem
                     jsonobject.put(APIConstants.K_TRUCK_NUMBER, SharedPreferencesManager.getTruckNumber(context));
                     jsonobject.put(APIConstants.K_PROCESS_TYPE, SharedPreferencesManager.getProcessType(context));
                     jsonobject.put(APIConstants.K_DRN, DC_NO);
+                    jsonobject.put(APIConstants.K_WAREHOUSE_ID, SharedPreferencesManager.getWarehouseId(context));
                     JSONArray js = new JSONArray();
                     for (int i = 0; i < barcodeList.size(); i++) {
                         JSONObject barcodeObject = new JSONObject();
@@ -578,20 +578,25 @@ public class AssetPalletMappingDispatchActivity extends AppCompatActivity implem
 
                     ItemDetailsList item = getItemBySkuCode(skuCode);
                     if (item != null) {
-                        if (Integer.parseInt(item.getPickedQty()) > Integer.parseInt(item.getScannedQty())) {
-                            barcodeList.add(barcodeHashMap);
-                            int scannedQty = Integer.parseInt(item.getScannedQty()) + 1;
-                            int remainingQty = Integer.parseInt(item.getPickedQty()) - scannedQty;
-                            item.setScannedQty(String.valueOf(scannedQty));
-                            item.setRemainingQty(String.valueOf(remainingQty));
-                            adapter.notifyItemChanged(itemDetailsLists.indexOf(item));
-                            barcodes.add(barcode);
-                            mediaPlayer.start();
+                        if (Double.parseDouble(item.getPickedQty()) > Double.parseDouble(item.getScannedQty())) {
+                            double scannedQty = Double.parseDouble(item.getScannedQty()) + 1;
+                            double remainingQty = Double.parseDouble(item.getPickedQty()) - scannedQty;
+                            if (Double.parseDouble(item.getRemainingQty()) < 1 && Double.parseDouble(item.getRemainingQty()) > 0) {
+                                AssetUtils.showCommonBottomSheetErrorDialog(context, "Cannot scan decimal items. Please manually enter the qty.");
+                            } else{
+                                barcodeList.add(barcodeHashMap);
+                                String formattedQty = String.format("%.3f", remainingQty);
+                                item.setScannedQty(String.valueOf(scannedQty));
+                                item.setRemainingQty(formattedQty);
+                                adapter.notifyItemChanged(itemDetailsLists.indexOf(item));
+                                barcodes.add(barcode);
+                                mediaPlayer.start();
+                            }
                         } else {
                             AssetUtils.showCommonBottomSheetErrorDialog(context, "All expected items are already scanned for this SKU");
                         }
                     } else {
-                        AssetUtils.showCommonBottomSheetErrorDialog(context, "The Scanned item doesn't match with the picked item");
+                        AssetUtils.showCommonBottomSheetErrorDialog(context, "The Scanned sku "+skuCode+" doesn't match with the picked item");
                     }
                 }
             } else {
@@ -752,7 +757,7 @@ public class AssetPalletMappingDispatchActivity extends AppCompatActivity implem
 
     private boolean areAllItemsScanned() {
         for (ItemDetailsList item : itemDetailsLists) {
-            if (!item.getRemainingQty().equals("0")) {
+            if (Double.parseDouble(item.getRemainingQty())>0) {
                 return false;
             }
         }

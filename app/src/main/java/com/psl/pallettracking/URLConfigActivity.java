@@ -63,7 +63,7 @@ public class URLConfigActivity extends AppCompatActivity {
         if(host_config){
             edtUrl.setText(HOST_URL);
         }else{
-            //edtUrl.setText(SharedPreferencesManager.getDefaultHostUrl(context));
+            edtUrl.setText(SharedPreferencesManager.getDefaultHostUrl(context));
         }
         btnClear2.setOnClickListener(new View.OnClickListener() {
             @Override

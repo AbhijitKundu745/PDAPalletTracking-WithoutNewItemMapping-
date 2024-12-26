@@ -13,7 +13,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -22,19 +21,12 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.JSONObjectRequestListener;
-import com.psl.pallettracking.adapters.AssetPalletMapWithoutQRAdapter;
 import com.psl.pallettracking.adapters.AssetPalletWithItemDispatchAdapter;
-import com.psl.pallettracking.adapters.AutoCompleteBinSpinnerAdapter;
-import com.psl.pallettracking.adapters.BinPartialPalletMappingAdapterModel;
-import com.psl.pallettracking.adapters.BinPartialPalletMappingCreationPickedProcessAdapter;
-import com.psl.pallettracking.adapters.BinPartialPalletMappingCreationProcessAdapter;
-import com.psl.pallettracking.adapters.BinPartialPalletMappingCreationProcessModel;
 import com.psl.pallettracking.adapters.skuitemListAdapter;
 import com.psl.pallettracking.database.DatabaseHandler;
 import com.psl.pallettracking.databinding.ActivityAsssetPalletMappingWithItemForDispatchV1Binding;
@@ -49,7 +41,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -70,7 +61,7 @@ public class AsssetPalletMappingWithItemForDispatchV1Activity extends AppCompatA
     private String qty = "";
     private String START_DATE = "";
     private String END_DATE = "";
-    private String Password = "PASS007";
+    private String Password = "PASSDISPATCH007";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -153,17 +144,13 @@ public class AsssetPalletMappingWithItemForDispatchV1Activity extends AppCompatA
                 if (!areAllItemsScanned()) {
                     // Handle item click here
                     String searchText = binding.edtSearch.getText().toString().toLowerCase(Locale.getDefault());
-                    ItemDetailsList clickedItem;
-                    if (searchText.length() == 0) {
-                        clickedItem = itemList.get(position);
-                    } else {
-                        clickedItem = filteredList.get(position);
-                    }
 
+                    if (searchText.length() == 0) {
+                        ItemDetailsList clickedItem = itemList.get(position);
                         ItemDetailsList item = getItemByItemSKU(clickedItem.getItemDesc(), clickedItem.getBatchID(), clickedItem.getBinName());
-                        if(item != null){
+                        if (item != null) {
                             int originalPosition = itemList.indexOf(clickedItem); // Find original position in unfiltered list
-                            if (Integer.parseInt(item.getPickedQty()) > Integer.parseInt(item.getScannedQty())) {
+                            if (Double.parseDouble(item.getPickedQty()) > Double.parseDouble(item.getScannedQty())) {
 
                                 if (originalPosition != -1) {
                                     // Perform actions based on the clicked item from the unfiltered list
@@ -174,23 +161,30 @@ public class AsssetPalletMappingWithItemForDispatchV1Activity extends AppCompatA
                             } else {
                                 AssetUtils.showCommonBottomSheetErrorDialog(context, "All expected items have already selected for this SKU");
                             }
-                        }
-                        else {
+                        } else {
                             AssetUtils.showCommonBottomSheetErrorDialog(context, "Item not found");
                         }
-//                    } else {
-//                        ItemDetailsList clickedItemFilter = filteredList.get(position);// Use filtered list
-//                        int originalPosition1 = filteredList.indexOf(clickedItemFilter); // Find original position in unfiltered list
-//                        if (originalPosition1 != -1) {
-//                            // Perform actions based on the clicked item from the unfiltered list
-//                            binding.textItemDesc1.setText(clickedItemFilter.getItemDesc());
-//                            binding.edtPickedQty.setText("" + clickedItemFilter.getPickedQty());
-//                            selectedItemObject = filteredList.get(originalPosition1); // Use original position
-//                        } else {
-//                            // Item not found in original list
-//                            // Handle this case if needed
-//                        }
-//
+                    } else {
+                        ItemDetailsList clickedItemFilter = filteredList.get(position);// Use filtered list
+                        ItemDetailsList item = getItemByItemSKU(clickedItemFilter.getItemDesc(), clickedItemFilter.getBatchID(), clickedItemFilter.getBinName());
+                    if(item != null){
+                        int originalPosition1 = filteredList.indexOf(clickedItemFilter); // Find original position in unfiltered list
+                      if (Double.parseDouble(item.getPickedQty()) > Double.parseDouble(item.getScannedQty())) {
+                        if (originalPosition1 != -1) {
+                            // Perform actions based on the clicked item from the unfiltered list
+                            binding.textItemDesc1.setText(clickedItemFilter.getItemDesc());
+                            binding.edtPickedQty.setText("" + clickedItemFilter.getPickedQty());
+                            selectedItemObject = filteredList.get(originalPosition1); // Use original position
+                        }
+                      }
+                      else {
+                          AssetUtils.showCommonBottomSheetErrorDialog(context, "All expected items have already selected for this SKU");
+                      }
+                    }
+                    else {
+                        AssetUtils.showCommonBottomSheetErrorDialog(context, "Item not found");
+                    }
+                }
                 } else {
                     AssetUtils.showCommonBottomSheetErrorDialog(context, "All items have already selected");
                 }
@@ -257,27 +251,28 @@ public class AsssetPalletMappingWithItemForDispatchV1Activity extends AppCompatA
                         //please add qty
                         AssetUtils.showCommonBottomSheetErrorDialog(context, "Please add item quantity");
                     } else if (!qty.equalsIgnoreCase("0")) {
-                        int prevQty = Integer.parseInt(qty);
-                        int TotalQty = 0;
+                        String batchID = binding.batchID.getText().toString();
+                        double prevQty = Double.parseDouble(qty);
+                        double TotalQty = 0;
                         for (ItemDetailsList item1 : selectedItemList) {
-                            TotalQty += Integer.parseInt(item1.getScannedQty());
+                            TotalQty += Double.parseDouble(item1.getScannedQty());
                         }
                         TotalQty += prevQty;
-                        int finalTotalQty = TotalQty;
+                        double finalTotalQty = TotalQty;
                         ItemDetailsList obj = new ItemDetailsList();
                         obj.setScannedQty(qty);
                         obj.setItemDesc(selectedItemObject.getItemDesc());
-                        obj.setBatchID(selectedItemObject.getBatchID());
+                        obj.setBatchID(batchID);
                         obj.setSkuCode(selectedItemObject.getSkuCode());
                         obj.setBinName(selectedItemObject.getBinName());
 
                         ItemDetailsList item = getItemByItemSKU(selectedItemObject.getItemDesc(), selectedItemObject.getBatchID(), selectedItemObject.getBinName());
                         if (item != null) {
-                            if (Integer.parseInt(item.getPickedQty()) >= Integer.parseInt(qty)) {
+                            if (Double.parseDouble(item.getPickedQty()) >= Double.parseDouble(qty)) {
                                 selectedItemList.add(obj);
                                 selectedItemAdapter.notifyItemInserted(selectedItemList.size() - 1);
-                                int scannedQty = Integer.parseInt(item.getScannedQty()) + Integer.parseInt(qty);
-                                int remainingQty = Integer.parseInt(item.getPickedQty()) - scannedQty;
+                                double scannedQty = Double.parseDouble(item.getScannedQty()) + Double.parseDouble(qty);
+                                double remainingQty = Double.parseDouble(item.getPickedQty()) - scannedQty;
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -287,6 +282,7 @@ public class AsssetPalletMappingWithItemForDispatchV1Activity extends AppCompatA
                                 item.setScannedQty(String.valueOf(scannedQty));
                                 item.setRemainingQty(String.valueOf(remainingQty));
                                 ItemAdapter.notifyItemChanged(itemList.indexOf(item));
+                                ItemAdapter.notifyItemChanged(filteredList.indexOf(item));
                             } else {
                                 AssetUtils.showCommonBottomSheetErrorDialog(context, "The selected qty cannot be greater than the original qty");
                             }
@@ -297,6 +293,7 @@ public class AsssetPalletMappingWithItemForDispatchV1Activity extends AppCompatA
 
                         binding.edtPickedQty.setText("");
                         binding.textItemDesc1.setText("");
+                        binding.batchID.setText("");
                     } else {
                         AssetUtils.showCommonBottomSheetErrorDialog(context, "Please enter a valid quantity");
                     }
@@ -498,7 +495,7 @@ public class AsssetPalletMappingWithItemForDispatchV1Activity extends AppCompatA
     }
     private boolean areAllItemsScanned() {
         for (ItemDetailsList item : itemList) {
-            if (!item.getRemainingQty().equals("0")) {
+            if (Double.parseDouble(item.getRemainingQty())>0) {
                 return false;
             }
         }
@@ -539,6 +536,7 @@ public class AsssetPalletMappingWithItemForDispatchV1Activity extends AppCompatA
                     jsonobject.put(APIConstants.K_TRUCK_NUMBER, SharedPreferencesManager.getTruckNumber(context));
                     jsonobject.put(APIConstants.K_PROCESS_TYPE, SharedPreferencesManager.getProcessType(context));
                     jsonobject.put(APIConstants.K_DRN, DC_NO);
+                    jsonobject.put(APIConstants.K_WAREHOUSE_ID, SharedPreferencesManager.getWarehouseId(context));
                     JSONArray js = new JSONArray();
                     for (int i = 0; i < selectedItemList.size(); i++) {
                         JSONObject barcodeObject = new JSONObject();
@@ -547,10 +545,11 @@ public class AsssetPalletMappingWithItemForDispatchV1Activity extends AppCompatA
                         String batchID = obj.getBatchID();
                         String itemCode = obj.getSkuCode();
                         String qty = obj.getScannedQty();
-                        String itemDescription = items + "," + batchID + "," + itemCode;
+                        String itemDescription = items + ","+ itemCode;
                         //barcodeObject.put(APIConstants.K_ACTIVITY_DETAILS_ID, epc + AssetUtils.getSystemDateTimeInFormatt());
                         barcodeObject.put(APIConstants.K_ITEM_DESCRIPTION, itemDescription);
                         barcodeObject.put("Qty", qty);
+                        barcodeObject.put("BatchID", batchID);
 
                         //barcodeObject.put(APIConstants.K_ACTIVITY_ID, epc + AssetUtils.getSystemDateTimeInFormatt());
                         barcodeObject.put(APIConstants.K_TRANSACTION_DATE_TIME, AssetUtils.getSystemDateTimeInFormatt());
@@ -737,6 +736,7 @@ public class AsssetPalletMappingWithItemForDispatchV1Activity extends AppCompatA
         selectedItemObject = null;
         binding.edtPickedQty.setText("");
         binding.textTotalQty.setText("");
+        binding.batchID.setText("");
     }
 
     @Override

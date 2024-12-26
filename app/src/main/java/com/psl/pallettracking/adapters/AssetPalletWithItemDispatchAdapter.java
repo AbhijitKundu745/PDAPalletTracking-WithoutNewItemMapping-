@@ -17,11 +17,14 @@ import com.psl.pallettracking.AsssetPalletMappingWithItemForDispatchV1Activity;
 import com.psl.pallettracking.R;
 import com.psl.pallettracking.viewHolder.ItemDetailsList;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class AssetPalletWithItemDispatchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private Context context;
     private List<ItemDetailsList> itemsList;
+    private List<ItemDetailsList> filteredList;
 
     public AssetPalletWithItemDispatchAdapter (Context context, List<ItemDetailsList> itemsList){
         this.context = context;
@@ -77,6 +80,24 @@ public class AssetPalletWithItemDispatchAdapter extends RecyclerView.Adapter<Rec
 //            }
 //        });
 
+    }
+    public void filter(String searchText) {
+        filteredList.clear();
+        if (searchText.isEmpty()) {
+            filteredList.addAll(itemsList);
+        } else {
+            for (ItemDetailsList item : itemsList) {
+                if (item.getItemDesc().toLowerCase(Locale.getDefault()).contains(searchText.toLowerCase(Locale.getDefault()))) {
+                    filteredList.add(item);
+                }
+            }
+        }
+        notifyDataSetChanged();
+    }
+    public void filterList(List<ItemDetailsList> filteredList) {
+        this.itemsList = new ArrayList<>(filteredList);
+        this.filteredList = new ArrayList<>(filteredList);
+        notifyDataSetChanged();
     }
 //    public void updateDataset(List<ItemDetailsList> newList) {
 //        itemsList.clear();

@@ -2,8 +2,9 @@ package com.psl.pallettracking.adapters;
 
 public class BinPartialPalletMappingCreationProcessModel {
     String binNumber,binDescription, batchId, itemID, itemName;
-    int pickedQty, originalPickedQty;
+    double pickedQty, originalPickedQty;
     Integer stockBinId;
+    boolean isClickedEnable;
 
     public String getBatchId() {
         return batchId;
@@ -30,18 +31,18 @@ public class BinPartialPalletMappingCreationProcessModel {
         this.binDescription = binDescription;
     }
 
-    public int getPickedQty() {
+    public double getPickedQty() {
         return pickedQty;
     }
 
-    public void setPickedQty(int pickedQty) {
+    public void setPickedQty(double pickedQty) {
         this.pickedQty = pickedQty;
     }
-    public int getOriginalPickedQty() {
+    public double getOriginalPickedQty() {
         return originalPickedQty;
     }
 
-    public void setOriginalPickedQty(int originalPickedQty) {
+    public void setOriginalPickedQty(double originalPickedQty) {
         this.originalPickedQty = originalPickedQty;
     }
     public String getItemID() {
@@ -64,5 +65,11 @@ public class BinPartialPalletMappingCreationProcessModel {
 
     public void setStockBinId(Integer stockBinId) {
         this.stockBinId = stockBinId;
+    }
+    public boolean getClickedEnable() {
+        return isClickedEnable;
+    }
+    public void setClickedEnable(boolean isClickedEnable) {
+        this.isClickedEnable = isClickedEnable;
     }
 }

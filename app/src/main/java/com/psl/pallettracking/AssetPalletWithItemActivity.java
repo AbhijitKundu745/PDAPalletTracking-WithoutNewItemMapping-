@@ -85,7 +85,6 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
     HashMap<String, String> hashMap = new HashMap<>();
     HashMap<String, String> barcodeHashMap = new HashMap<>();
     private List<String> epcs = new ArrayList<>();
-
     ArrayList<String> barcodes = new ArrayList<>();
     String menu_id = AppConstants.MENU_ID_CARTON_PALLET_MAPPING;
     String activity_type = "";
@@ -95,9 +94,9 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
     List<ItemDetailsList> itemDetailsLists, originalItemList;
     private String Password = "PASSRECEIVING007";
     private boolean IS_QTY_EXCEED = false;
-    private int EXCEEDED_QTY = 0;
+    private double EXCEEDED_QTY = 0;
     private String EXCEEDED_SKU = "";
-    private int quantity = 0;
+    private double quantity = 0;
 
     @Override
     public void onBackPressed() {
@@ -142,13 +141,12 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
         binding.LvTags.setAdapter(qrAdapter);
         qrAdapter.notifyDataSetChanged();
         setDefault();
-
         SharedPreferencesManager.setPower(context, 10);
 
         binding.btnUpload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (tagList.size() > 0) {
+                if (barcodeList.size() > 0) {
                     if(!IS_QTY_EXCEED){
                         showCustomConfirmationDialog("Are you sure you want to upload", "UPLOAD","","");
                     }
@@ -196,31 +194,30 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
                         AssetUtils.showCommonBottomSheetErrorDialog(context, "Please select Item");
                     } else {
                         String count = binding.edtQty.getText().toString();
-                        if (count.equalsIgnoreCase("0") || count.equalsIgnoreCase("")) {
+                        String BatchID = binding.batchID.getText().toString();
+                        if (count.equalsIgnoreCase("0.0") || count.equalsIgnoreCase("")) {
                             AssetUtils.showCommonBottomSheetErrorDialog(context, "Please enter valid quantity");
                         } else {
                             String[] parts = SELECTED_ITEM.split("[,]+");
-                            String skuCode = parts[2].trim().replaceAll("^0*", "");
-                            String batchID = parts[1].trim().replaceAll("^0*", "");
-                            Log.e("CheckExist",String.valueOf(db.isSKUExist(skuCode)));
-                            Log.e("skuCode",skuCode);
-                            Log.e("batchID",batchID);
+                            String skuCode = parts[1].trim().replaceAll("^0*", "");
                             if(db.isSKUExist(skuCode)){
-                                ItemDetailsList item = getItemBySkuCode(skuCode, batchID);
+                                ItemDetailsList item = getItemBySkuCode(skuCode);
                                 if (item != null) {
-                                    quantity = count.isEmpty() || count == null ? 0 : Integer.parseInt(count);
-                                    if (Integer.parseInt(item.getPickedQty()) >= quantity) {
+                                    quantity = count.isEmpty() || count == null ? 0 : Double.parseDouble(count);
+                                    if (Double.parseDouble(item.getPickedQty()) >= quantity) {
                                         //nothing
                                     } else {
                                         IS_QTY_EXCEED = true;
-                                        int pickedQty = Integer.parseInt(item.getPickedQty());
+                                        double pickedQty = Double.parseDouble(item.getPickedQty());
                                         pickedQty = pickedQty <= 0 ? 0 : pickedQty;
                                         EXCEEDED_QTY = quantity - pickedQty;
                                         EXCEEDED_SKU = skuCode;
                                     }
-                                    addBarcodeToList(SELECTED_ITEM, count);
+
+                                    addBarcodeToList(SELECTED_ITEM, count, BatchID);
                                     binding.edtQty.setText("");
                                     SELECTED_ITEM = default_source_item;
+                                    binding.batchID.setText("");
                                 }
 
                             }
@@ -561,15 +558,12 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
             @Override
             public void run() {
                 getSKUDetails(DC_NO);
-                PALLET_TAG_ID = "";
                 CURRENT_EPC = "";
                 IS_SCANNING_LOCKED = false;
                 IS_SCANNING_ALREADY_STARTED = false;
                 changeImageStatusToRfidScan();
                 binding.imgStatus.setImageDrawable(getDrawable(R.drawable.rfidscan));
-                binding.edtRfidNumber.setText("");
                 allow_trigger_to_press = true;
-                IS_PALLET_TAG_SCANNED = false;
                 //binding.textHint.setVisibility(View.GONE);
                 binding.textCount.setVisibility(View.GONE);
                 binding.btnAdd.setVisibility(View.GONE);
@@ -593,6 +587,18 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
 
                 binding.textCount.setText("Count : " + barcodeList.size());
                 binding.totalQty.setText(""+0);
+                END_DATE = "";
+                if(SharedPreferencesManager.getWarehouseId(context) == 4){
+                    IS_PALLET_TAG_SCANNED = true;
+                    binding.edtRfidNumber.setText("CWC_P1");
+                    START_DATE = AssetUtils.getSystemDateTimeInFormatt();
+                    PALLET_TAG_ID = "14020000000150534C202020";
+                } else{
+                    PALLET_TAG_ID = "";
+                    IS_PALLET_TAG_SCANNED = false;
+                    START_DATE = "";
+                    binding.edtRfidNumber.setText("");
+                }
             }
         });
     }
@@ -783,20 +789,19 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
 
                 } else if (action.equals("DELETE")) {
                     barcodeList.remove(CURRENT_INDEX);
-                    int prevCount = Integer.parseInt(binding.totalQty.getText().toString());
+                    double prevCount = Double.parseDouble(binding.totalQty.getText().toString());
                     Log.e("PrevCount", String.valueOf(prevCount));
-                    int currCount = Integer.parseInt(count);
+                    double currCount = Double.parseDouble(count);
                     Log.e("CurrCount", String.valueOf(currCount));
-                    int totalCount = prevCount - currCount;
+                    double totalCount = prevCount - currCount;
                     Log.e("TotCount", String.valueOf(totalCount));
                     binding.totalQty.setText("" + totalCount);
                     String[] parts = barcode.split("[,]+");
-                    String skuCode = parts[2].trim().replaceAll("^0*", "");
-                    String batchID = parts[1].trim().replaceAll("^0*", "");
-                    ItemDetailsList item = getItemBySkuCode(skuCode, batchID);
+                    String skuCode = parts[1].trim().replaceAll("^0*", "");
+                    ItemDetailsList item = getItemBySkuCode(skuCode);
                     if (item != null) {
-                        quantity = count.isEmpty() || count == null ? 0 : Integer.parseInt(count);
-                        if (Integer.parseInt(item.getPickedQty()) >= quantity) {
+                        quantity = count.isEmpty() || count == null ? 0 : Double.parseDouble(count);
+                        if (Double.parseDouble(item.getPickedQty()) >= quantity) {
                             //nothing
                         } else {
                             IS_QTY_EXCEED = false;
@@ -859,6 +864,7 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
                     jsonobject.put(APIConstants.K_TRUCK_NUMBER, SharedPreferencesManager.getTruckNumber(context));
                     jsonobject.put(APIConstants.K_PROCESS_TYPE, SharedPreferencesManager.getProcessType(context));
                     jsonobject.put(APIConstants.K_DRN, DC_NO);
+                    jsonobject.put(APIConstants.K_WAREHOUSE_ID, SharedPreferencesManager.getWarehouseId(context));
                     //jsonobject.put(APIConstants.K_PALLET_ID, CURRENT_EPC);
                     JSONArray js = new JSONArray();
                     for (int i = 0; i < barcodeList.size(); i++) {
@@ -867,6 +873,7 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
                         String qty = barcodeList.get(i).get("COUNT");
                         //barcodeObject.put(APIConstants.K_ACTIVITY_DETAILS_ID, epc + AssetUtils.getSystemDateTimeInFormatt());
                         barcodeObject.put(APIConstants.K_ITEM_DESCRIPTION, epc);
+                        barcodeObject.put("BatchID", barcodeList.get(i).get("BATCHID"));
                         barcodeObject.put("Qty", qty);
 
                         //barcodeObject.put(APIConstants.K_ACTIVITY_ID, epc + AssetUtils.getSystemDateTimeInFormatt());
@@ -1223,7 +1230,7 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
 
     }
 
-    private void addBarcodeToList(String barcode, String count) {
+    private void addBarcodeToList(String barcode, String count, String BatchID) {
         hideProgressDialog();
         Log.e("BARCODECOUNT", "BARCODE:" + barcode + " COUNT:" + count);
         allow_trigger_to_press = true;
@@ -1231,6 +1238,7 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
         barcodeHashMap.put("EPC", CURRENT_EPC);
         barcodeHashMap.put("BARCODE", barcode);
         barcodeHashMap.put("ASSETNAME", barcode);
+        barcodeHashMap.put("BATCHID", BatchID);
         barcodeHashMap.put("COUNT", count);
         barcodeHashMap.put("STATUS", "true");
         barcodeHashMap.put("MESSAGE", "");
@@ -1240,11 +1248,11 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
 
         if (index == -1) {
             barcodeList.add(barcodeHashMap);
-            int prevCount = Integer.parseInt(binding.totalQty.getText().toString());
+            double prevCount = Double.parseDouble(binding.totalQty.getText().toString());
             Log.e("PrevCount", String.valueOf(prevCount));
-            int currCount = Integer.parseInt(count);
+            double currCount = Double.parseDouble(count);
             Log.e("CurrCount", String.valueOf(currCount));
-            int totalCount = prevCount+currCount;
+            double totalCount = prevCount+currCount;
             Log.e("TotCount", String.valueOf(totalCount));
             binding.totalQty.setText(""+totalCount);
             if (!barcodes.contains(barcode)) {
@@ -1345,7 +1353,7 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
                     itemList.setOriginalPickedQty(PickedQty);
                     itemDetailsLists.add(itemList);
                     originalItemList.add(itemList);
-                    String itemDescr = ItemDesc+","+BatchID+","+SKUCode;
+                    String itemDescr = ItemDesc+","+SKUCode;
                     barcodes.add(itemDescr);
                     allow_trigger_to_press = true;
 
@@ -1403,9 +1411,9 @@ public class AssetPalletWithItemActivity extends AppCompatActivity {
         // customConfirmationDialog.getWindow().getAttributes().windowAnimations = R.style.SlideBottomUpAnimation;
         customConfirmationDialogSpec.show();
     }
-    private ItemDetailsList getItemBySkuCode(String skuCode, String batchID) {
+    private ItemDetailsList getItemBySkuCode(String skuCode) {
         for (ItemDetailsList item : itemDetailsLists) {
-            if (item.getSkuCode().equals(skuCode) && item.getBatchID().equals(batchID)) {
+            if (item.getSkuCode().equals(skuCode)) {
                 return item;
             }
         }

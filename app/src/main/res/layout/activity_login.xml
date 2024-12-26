@@ -11,27 +11,27 @@
     android:orientation="vertical"
     android:background="@color/page_background"
     tools:context=".LoginActivity">
-    <ImageView
-        android:layout_width="300dp"
-        android:layout_height="70dp"
-        android:scaleType="fitXY"
-        android:layout_gravity="center"
-        android:src="@drawable/banner"
-        android:layout_marginTop="50dp"/>
+        <ImageView
+            android:layout_width="150dp"
+            android:layout_height="0dp"
+            android:layout_weight="0.3"
+            android:scaleType="fitXY"
+            android:layout_gravity="center"
+            android:src="@drawable/grbloge" />
+
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:padding="10dp"
+        android:layout_weight="1.5"
+        android:padding="3dp"
         android:layout_gravity="center"
-        android:gravity="center"
         android:orientation="vertical">
         <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:orientation="horizontal"
-            android:layout_gravity="center"
             android:gravity="center"
-            android:layout_height="80dp">
+            android:layout_height="80dp"
+            android:layout_marginTop="20dp">
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imgDummy"
                 android:layout_width="50dp"
@@ -40,7 +40,7 @@
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imgUser"
                 android:layout_weight="1"
-                android:layout_width="80dp"
+                android:layout_width="0dp"
                 android:layout_height="80dp"
                 android:src="@drawable/usericon"/>
             <androidx.appcompat.widget.AppCompatImageView
@@ -68,15 +68,17 @@
                 android:letterSpacing="0.1"
                 android:maxLength="50"
                 android:paddingLeft="5dp"
-                android:textColor="#000000"
+                android:textColor="#27557f"
                 android:textColorHint="@color/lighter_grey"
-                android:textSize="15sp" />
+                android:textSize="15sp"
+                android:drawableTint="#27557f"/>
 
         </com.google.android.material.textfield.TextInputLayout>
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="75dp"
             app:passwordToggleEnabled="true"
+            app:passwordToggleTint="#27557f"
             style="@style/NoUnderlineTextInputLayout">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -89,24 +91,35 @@
                 android:letterSpacing="0.1"
                 android:maxLength="50"
                 android:paddingLeft="5dp"
-                android:textColor="#0C0C0C"
+                android:textColor="#27557f"
                 android:textColorHint="@color/lighter_grey"
                 android:textSize="15sp" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
-
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:id="@+id/searchableTextView"
+            android:hint="Select Warehouse"
+            android:padding="12dp"
+            android:gravity="center_vertical"
+            android:drawableEnd="@drawable/drop_down"
+            android:background="@android:drawable/editbox_background"
+            android:layout_marginTop="5dp"
+            />
         <androidx.appcompat.widget.AppCompatCheckBox
             android:id="@+id/chkRemember"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="5dp"
             android:layout_width="match_parent"
             android:text="Remember Me"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:textColor="#27557f"/>
 
         <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="5dp"
             android:orientation="horizontal">
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnLogin"
@@ -130,16 +143,29 @@
             android:id="@+id/textDeviceId"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
-            android:text="Device ID: " />
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:text="Device ID: "
+            android:textSize="12sp"
+            android:textColor="#27557f"/>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
-            android:text="Version: 3.7.8.4.1" />
-
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:textSize="12sp"
+            android:text="Version: 3.7.8.8.3"
+            android:textColor="#27557f"/>
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:gravity="center"
+            android:text="@string/footer"
+            android:textColor="#27557f"
+            android:textStyle="bold"
+            android:layout_marginTop="5dp"
+            android:textSize="12sp"/>
     </androidx.appcompat.widget.LinearLayoutCompat>
 
 
